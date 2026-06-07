@@ -1,0 +1,144 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+    function signedIn() { return request.auth != null; }
+
+    function myProfile() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isApprovedMemberOf(orgId) {
+      return signedIn()
+        && myProfile().orgId == orgId
+        && myProfile().status == 'approved';
+    }
+
+    function isAdminOf(orgId) {
+      return isApprovedMemberOf(orgId) && myProfile().role == 'admin';
+    }
+
+    function isInvestigatorOf(orgId) {
+      return isApprovedMemberOf(orgId)
+        && (myProfile().role == 'investigator' || myProfile().role == 'admin');
+    }
+
+    // Enum allow-lists — MUST mirror src/lib/constants.js
+    function validType(v) {
+      return v == '' || v in ['near_miss', 'first_aid', 'lost_time', 'reportable', 'property_damage'];
+    }
+    function validSeverity(v) {
+      return v == '' || v in ['low', 'medium', 'high', 'critical'];
+    }
+    function validCategory(v) {
+      return v == '' || v in ['slip_trip_fall', 'fall_from_height', 'struck_by_moving_object',
+        'contact_with_machinery', 'manual_handling', 'vehicle', 'electricity',
+        'exposure_to_substance', 'fire_explosion', 'assault', 'other'];
+    }
+    function validLifecycle(v) {
+      return v in ['reporting', 'investigation_team', 'investigation', 'capa', 'horizontal', 'closed'];
+    }
+    function validIllnessLifecycle(v) {
+      return v in ['reporting', 'actions', 'closed'];
+    }
+
+    // Shape/size validation for an incident write payload.
+    function validIncident(d) {
+      return d.keys().hasAll(['type', 'severity', 'category', 'lifecycle'])
+        && validType(d.type)
+        && validSeverity(d.severity)
+        && validCategory(d.category)
+        && validLifecycle(d.lifecycle)
+        && (!('narrative' in d) || (d.narrative is string && d.narrative.size() <= 5000))
+        && (!('probableCause' in d) || (d.probableCause is string && d.probableCause.size() <= 2000))
+        && (!('location' in d) || (d.location is string && d.location.size() <= 200));
+    }
+
+    function validIllness(d) {
+      return d.keys().hasAll(['lifecycle'])
+        && validIllnessLifecycle(d.lifecycle)
+        && (!('healthIssue' in d) || (d.healthIssue is string && d.healthIssue.size() <= 5000))
+        && (!('site' in d) || (d.site is string && d.site.size() <= 200));
+    }
+
+    // A base64 file (photo / medical record / attachment): image or PDF, ≤ 750KB.
+    function validFile(d) {
+      return (d.type.matches('image/.*') || d.type == 'application/pdf')
+        && d.size <= 750 * 1024;
+    }
+
+    // ── Organizations ──
+    match /organizations/{orgId} {
+      allow read: if isApprovedMemberOf(orgId);
+      // Created during register-org flow (the creator records themselves as admin
+      // in the same batch); updated/deleted by org admins only.
+      allow create: if signedIn();
+      allow update, delete: if isAdminOf(orgId);
+
+      // ── Incidents ── (org-scoped, validated). Soft-delete is an UPDATE any
+      // member can do; a permanent PURGE is a real delete, admin-only.
+      match /incidents/{incidentId} {
+        allow read: if isApprovedMemberOf(orgId);
+        allow create, update: if isApprovedMemberOf(orgId)
+          && validIncident(request.resource.data);
+        allow delete: if isAdminOf(orgId);
+
+        // Photos / medical records / diagram exports (base64).
+        match /photos/{photoId} {
+          allow read: if isApprovedMemberOf(orgId);
+          allow create: if isApprovedMemberOf(orgId) && validFile(request.resource.data);
+          allow update, delete: if isApprovedMemberOf(orgId);
+        }
+      }
+
+      // ── Illnesses ──
+      match /illnesses/{illnessId} {
+        allow read: if isApprovedMemberOf(orgId);
+        allow create, update: if isApprovedMemberOf(orgId)
+          && validIllness(request.resource.data);
+        allow delete: if isAdminOf(orgId);
+
+        match /files/{fileId} {
+          allow read: if isApprovedMemberOf(orgId);
+          allow create: if isApprovedMemberOf(orgId) && validFile(request.resource.data);
+          allow update, delete: if isApprovedMemberOf(orgId);
+        }
+      }
+
+      // ── Audit log ── append-only, immutable.
+      match /auditLogs/{logId} {
+        allow read: if isApprovedMemberOf(orgId);
+        allow create: if isApprovedMemberOf(orgId);
+        allow update, delete: if false;
+      }
+
+      // ── Meta (stats + counters) ── maintained by members' client writes.
+      match /meta/{doc} {
+        allow read: if isApprovedMemberOf(orgId);
+        allow write: if isApprovedMemberOf(orgId);
+      }
+    }
+
+    // ── Users ──
+    match /users/{uid} {
+      allow read: if signedIn() && (
+        request.auth.uid == uid ||
+        isAdminOf(resource.data.orgId)
+      );
+      allow create: if signedIn() && request.auth.uid == uid;
+      allow update: if signedIn() && (
+        request.auth.uid == uid ||
+        isAdminOf(resource.data.orgId)
+      );
+    }
+
+    // ── Public org name index ── minimal { orgId, name } so signup can resolve
+    // an org by name without reading the member-only organizations docs.
+    match /orgIndex/{nameLower} {
+      allow read: if true;
+      allow create: if signedIn();
+      allow update, delete: if false;
+    }
+  }
+}

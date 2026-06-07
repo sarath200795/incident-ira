@@ -1,0 +1,75 @@
+import { lazy, Suspense } from 'react'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { AnimatePresence } from 'framer-motion'
+import ProtectedRoute from './components/ProtectedRoute'
+import Layout from './components/Layout'
+import { IncidentProvider } from './context/IncidentContext'
+import { FullScreenLoader } from './components/ui'
+import { isFirebaseConfigured } from './firebase'
+import SetupNeeded from './pages/SetupNeeded'
+
+// Route-level code splitting — each page is fetched only when navigated to.
+const Login = lazy(() => import('./pages/Login'))
+const Signup = lazy(() => import('./pages/Signup'))
+const RegisterOrg = lazy(() => import('./pages/RegisterOrg'))
+const PendingApproval = lazy(() => import('./pages/PendingApproval'))
+const Legal = lazy(() => import('./pages/Legal'))
+
+const Dashboard = lazy(() => import('./pages/Dashboard'))
+const Incidents = lazy(() => import('./pages/Incidents'))
+const IncidentWizard = lazy(() => import('./pages/IncidentWizard'))
+const Illnesses = lazy(() => import('./pages/Illnesses'))
+const IllnessWizard = lazy(() => import('./pages/IllnessWizard'))
+const ActionTracker = lazy(() => import('./pages/ActionTracker'))
+const Users = lazy(() => import('./pages/Users'))
+const AuditLog = lazy(() => import('./pages/AuditLog'))
+const RecycleBin = lazy(() => import('./pages/RecycleBin'))
+
+function AppShell() {
+  return (
+    <ProtectedRoute>
+      <IncidentProvider>
+        <Layout />
+      </IncidentProvider>
+    </ProtectedRoute>
+  )
+}
+
+export default function App() {
+  const location = useLocation()
+  if (!isFirebaseConfigured) return <SetupNeeded />
+  return (
+    <Suspense fallback={<FullScreenLoader label="Loading…" />}>
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
+          <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/register-org" element={<RegisterOrg />} />
+          <Route path="/pending" element={<PendingApproval />} />
+          <Route path="/privacy" element={<Legal kind="privacy" />} />
+          <Route path="/terms" element={<Legal kind="terms" />} />
+          <Route path="/data-retention" element={<Legal kind="retention" />} />
+          <Route path="/cookies" element={<Legal kind="cookies" />} />
+
+          <Route path="/app" element={<AppShell />}>
+            <Route index element={<Navigate to="/app/dashboard" replace />} />
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="incidents" element={<Incidents />} />
+            <Route path="incidents/new" element={<IncidentWizard />} />
+            <Route path="incidents/:id" element={<IncidentWizard />} />
+            <Route path="illness" element={<Illnesses />} />
+            <Route path="illness/new" element={<IllnessWizard />} />
+            <Route path="illness/:id" element={<IllnessWizard />} />
+            <Route path="actions" element={<ActionTracker />} />
+            <Route path="users" element={<ProtectedRoute adminOnly><Users /></ProtectedRoute>} />
+            <Route path="audit" element={<ProtectedRoute adminOnly><AuditLog /></ProtectedRoute>} />
+            <Route path="recycle" element={<ProtectedRoute adminOnly><RecycleBin /></ProtectedRoute>} />
+          </Route>
+
+          <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
+        </Routes>
+      </AnimatePresence>
+    </Suspense>
+  )
+}
