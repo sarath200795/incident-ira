@@ -1,13 +1,14 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { HeartPulse, Search, CheckCircle2, Clock, ShieldCheck, RotateCcw, ExternalLink } from 'lucide-react'
-import { PageHeader, Badge, EmptyState } from '../components/ui'
+import { HeartPulse, Search, CheckCircle2, Clock, ShieldCheck, RotateCcw, ExternalLink, Pencil, Lock } from 'lucide-react'
+import { PageHeader, Badge, EmptyState, Modal } from '../components/ui'
+import BodyMap from '../components/BodyMap'
 import { useIncidents } from '../context/IncidentContext'
 import { useAuth } from '../context/AuthContext'
 import { can } from '../lib/permissions'
-import { setInjuryVerified, injuryStatus } from '../lib/injuries'
-import { bodyPartLabel, INCIDENT_TYPE_BY_KEY, SEVERITY_BY_KEY } from '../lib/constants'
+import { setInjuryVerified, injuryStatus, updateInjury } from '../lib/injuries'
+import { bodyPartLabel, INCIDENT_TYPE_BY_KEY, SEVERITY_BY_KEY, INJURY_TYPES } from '../lib/constants'
 
 const FILTERS = [
   { key: 'all', label: 'All' },
@@ -19,9 +20,37 @@ export default function Injuries() {
   const { injuries } = useIncidents()
   const { profile, orgId } = useAuth()
   const mayVerify = can(profile?.role, 'injury.verify')
+  const mayEdit = can(profile?.role, 'incident.report') // reporter / investigator / admin
   const [filter, setFilter] = useState('all')
   const [search, setSearch] = useState('')
   const [busy, setBusy] = useState(null)
+  const [editing, setEditing] = useState(null) // injury being edited
+  const [form, setForm] = useState(null)
+  const [savingEdit, setSavingEdit] = useState(false)
+
+  const openEdit = (inj) => {
+    setEditing(inj)
+    setForm({
+      firstAidDone: !!inj.firstAidDone,
+      firstAidDetail: inj.firstAidDetail || '',
+      injuryType: inj.injuryType || '',
+      medication: inj.medication || '',
+      daysToReturnToWork: inj.daysToReturnToWork ?? '',
+      bodyParts: inj.bodyParts || [],
+    })
+  }
+  const saveEdit = async () => {
+    setSavingEdit(true)
+    try {
+      await updateInjury(orgId, editing.id, form, { uid: profile?.uid, name: profile?.name })
+      toast.success('Injury report updated')
+      setEditing(null)
+    } catch (e) {
+      toast.error(e.message || 'Could not update')
+    } finally {
+      setSavingEdit(false)
+    }
+  }
 
   const rows = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -104,17 +133,28 @@ export default function Injuries() {
                     </p>
                   </div>
 
-                  {mayVerify && (
-                    verified ? (
-                      <button onClick={() => verify(inj, false)} disabled={busy === inj.id} className="btn-ghost px-3 py-1.5 text-xs">
-                        <RotateCcw size={13} /> Unverify
-                      </button>
+                  <div className="flex shrink-0 items-center gap-2">
+                    {verified ? (
+                      <span className="inline-flex items-center gap-1 rounded-lg bg-clay-100 px-2.5 py-1.5 text-[11px] font-semibold text-ink-500"><Lock size={12} /> Locked</span>
                     ) : (
-                      <button onClick={() => verify(inj, true)} disabled={busy === inj.id} className="btn-primary px-3 py-1.5 text-xs">
-                        <CheckCircle2 size={14} /> Verify
-                      </button>
-                    )
-                  )}
+                      mayEdit && (
+                        <button onClick={() => openEdit(inj)} disabled={busy === inj.id} className="btn-ghost px-3 py-1.5 text-xs">
+                          <Pencil size={13} /> Edit
+                        </button>
+                      )
+                    )}
+                    {mayVerify && (
+                      verified ? (
+                        <button onClick={() => verify(inj, false)} disabled={busy === inj.id} className="btn-ghost px-3 py-1.5 text-xs">
+                          <RotateCcw size={13} /> Unverify
+                        </button>
+                      ) : (
+                        <button onClick={() => verify(inj, true)} disabled={busy === inj.id} className="btn-primary px-3 py-1.5 text-xs">
+                          <CheckCircle2 size={14} /> Verify
+                        </button>
+                      )
+                    )}
+                  </div>
                 </div>
 
                 <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-4">
@@ -138,6 +178,55 @@ export default function Injuries() {
           })}
         </div>
       )}
+
+      <Modal open={!!editing} onClose={() => setEditing(null)} title={`Edit injury report — ${editing?.personName || ''}`} maxWidth="max-w-2xl">
+        {form && (
+          <div className="grid gap-5 lg:grid-cols-2">
+            <div className="space-y-4">
+              <div>
+                <label className="label">First aid done?</label>
+                <div className="flex gap-2">
+                  {[{ v: true, l: 'Yes' }, { v: false, l: 'No' }].map((o) => (
+                    <button key={o.l} type="button" onClick={() => setForm({ ...form, firstAidDone: o.v })}
+                      className={`btn ${form.firstAidDone === o.v ? 'bg-brand-500 text-white shadow-clay-brand' : 'bg-clay-surface text-ink-600'}`}>{o.l}</button>
+                  ))}
+                </div>
+                {form.firstAidDone && (
+                  <input className="input mt-2" placeholder="First aid details" value={form.firstAidDetail} onChange={(e) => setForm({ ...form, firstAidDetail: e.target.value })} />
+                )}
+              </div>
+              <div>
+                <label className="label">Type of injury</label>
+                <select className="input" value={form.injuryType} onChange={(e) => setForm({ ...form, injuryType: e.target.value })}>
+                  <option value="">Select injury type…</option>
+                  {INJURY_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="label">Medication</label>
+                  <input className="input" placeholder="If any" value={form.medication} onChange={(e) => setForm({ ...form, medication: e.target.value })} />
+                </div>
+                <div>
+                  <label className="label">Days to return to work</label>
+                  <input type="number" min="0" className="input" value={form.daysToReturnToWork} onChange={(e) => setForm({ ...form, daysToReturnToWork: e.target.value })} />
+                </div>
+              </div>
+              <p className="text-xs text-ink-400">Medical record files are managed on the incident’s injury step.</p>
+            </div>
+            <div>
+              <label className="label">Injured body part(s)</label>
+              <BodyMap value={form.bodyParts} onChange={(bodyParts) => setForm({ ...form, bodyParts })} />
+            </div>
+          </div>
+        )}
+        <div className="mt-5 flex justify-end gap-2">
+          <button className="btn-ghost" onClick={() => setEditing(null)} disabled={savingEdit}>Cancel</button>
+          <button className="btn-primary" onClick={saveEdit} disabled={savingEdit}>
+            {savingEdit ? 'Saving…' : 'Save changes'}
+          </button>
+        </div>
+      </Modal>
     </div>
   )
 }

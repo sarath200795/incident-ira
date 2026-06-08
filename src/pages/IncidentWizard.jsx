@@ -4,7 +4,7 @@ import { useReactToPrint } from 'react-to-print'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import {
-  ClipboardList, Check, ChevronLeft, ChevronRight, Printer, Save, Loader2, ShieldAlert, CheckCircle2,
+  ClipboardList, Check, ChevronLeft, ChevronRight, Printer, Save, Loader2, ShieldAlert, CheckCircle2, Lock,
 } from 'lucide-react'
 import { PageHeader, Spinner } from '../components/ui'
 import StepInitialReport from '../components/wizard/StepInitialReport'
@@ -44,7 +44,7 @@ export default function IncidentWizard() {
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
   const { user, profile, role, orgId } = useAuth()
-  const { users, org } = useIncidents()
+  const { users, org, injuries } = useIncidents()
   const actor = useMemo(() => ({ uid: user?.uid, name: profile?.name || '' }), [user, profile])
 
   const [incident, setIncident] = useState(null)
@@ -96,6 +96,14 @@ export default function IncidentWizard() {
   const goStep = (s) => setParams({ step: s }, { replace: false })
 
   const canInvestigate = can(role, 'incident.investigate')
+  const isAdmin = role === 'admin'
+  // Once an incident is SAVED, its submitted facts (Step 1) are admin-only to edit.
+  const lockInitial = Boolean(incident) && !isAdmin
+  // Verified injuries are locked everywhere (unverify on the Injury Reports page to change).
+  const verifiedPersonIds = useMemo(
+    () => new Set(injuries.filter((j) => j.incidentId === incident?.id && j.status === 'verified').map((j) => j.personId)),
+    [injuries, incident]
+  )
 
   // ── Photo helpers ──
   const addPhoto = async (fileObj) => {
@@ -291,8 +299,13 @@ export default function IncidentWizard() {
       <motion.div key={step} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
         {step === 'initial' && (
           <div className="space-y-6">
+            {lockInitial && (
+              <div className="flex items-center gap-2 rounded-xl bg-amber-50 px-4 py-2.5 text-sm text-amber-800">
+                <Lock size={15} /> This incident has been saved — its report details can now only be edited by an admin.
+              </div>
+            )}
             <div className="card p-6">
-              <StepInitialReport value={draft} onChange={setDraft} users={users} />
+              <StepInitialReport value={draft} onChange={setDraft} users={users} readOnly={lockInitial} />
             </div>
             {incident && (
               <div className="card p-6">
@@ -302,6 +315,7 @@ export default function IncidentWizard() {
                   accept="image"
                   label="Add photo"
                   hint="Images up to 750 KB each."
+                  disabled={lockInitial}
                   files={photos.filter((p) => p.kind === 'photo')}
                   onAdd={(f) => addPhoto({ ...f, kind: 'photo' })}
                   onRemove={removePhoto}
@@ -320,6 +334,7 @@ export default function IncidentWizard() {
             onAddPhoto={addPhoto}
             onRemovePhoto={removePhoto}
             canEdit={Boolean(incident)}
+            lockedPersonIds={verifiedPersonIds}
           />
         )}
 
@@ -341,10 +356,16 @@ export default function IncidentWizard() {
 
         <div className="flex gap-2">
           {step === 'initial' && (
-            <button className="btn-primary" onClick={saveInitial} disabled={saving}>
-              {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-              {incident ? 'Save & continue' : 'Create incident'}
-            </button>
+            lockInitial ? (
+              <button className="btn-primary" onClick={() => goStep(nextStep())}>
+                Continue <ChevronRight size={16} />
+              </button>
+            ) : (
+              <button className="btn-primary" onClick={saveInitial} disabled={saving}>
+                {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                {incident ? 'Save & continue' : 'Create incident'}
+              </button>
+            )
           )}
           {step === 'injury' && (
             <button className="btn-primary" onClick={saveInjury} disabled={saving}>

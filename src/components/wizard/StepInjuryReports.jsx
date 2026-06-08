@@ -1,4 +1,4 @@
-import { HeartPulse, Stethoscope } from 'lucide-react'
+import { HeartPulse, Stethoscope, Lock } from 'lucide-react'
 import BodyMap from '../BodyMap'
 import FileUploader from '../FileUploader'
 import { INJURY_TYPES } from '../../lib/constants'
@@ -21,7 +21,7 @@ const blank = (p) => ({
  * it. `persons` = affected personnel; `value` = injuryReports[]; medical records
  * are stored as incident photos (kind 'medical_record') tagged by personId.
  */
-export default function StepInjuryReports({ persons = [], value = [], onChange, photos = [], onAddPhoto, onRemovePhoto, canEdit = true }) {
+export default function StepInjuryReports({ persons = [], value = [], onChange, photos = [], onAddPhoto, onRemovePhoto, canEdit = true, lockedPersonIds = new Set() }) {
   const reportFor = (p) => value.find((r) => r.personId === p.id) || blank(p)
   const setReport = (p, patch) => {
     const existing = value.find((r) => r.personId === p.id)
@@ -44,17 +44,21 @@ export default function StepInjuryReports({ persons = [], value = [], onChange, 
       {persons.map((p) => {
         const r = reportFor(p)
         const records = photos.filter((ph) => ph.personId === p.id)
+        const locked = lockedPersonIds.has(p.id)
         return (
           <div key={p.id} className="card p-5">
             <div className="mb-4 flex items-center gap-2">
               <div className="grid h-9 w-9 place-items-center rounded-xl bg-brand-500/10 text-brand-600"><HeartPulse size={18} /></div>
-              <div>
+              <div className="flex-1">
                 <h3 className="font-bold text-ink-900">{personName(p)}</h3>
                 <p className="text-xs text-ink-400 capitalize">{p.kind}{p.dept ? ` · ${p.dept}` : ''}{p.company ? ` · ${p.company}` : ''}</p>
               </div>
+              {locked && (
+                <span className="inline-flex items-center gap-1 rounded-lg bg-sky-50 px-2.5 py-1 text-[11px] font-semibold text-sky-700"><Lock size={12} /> Verified — locked</span>
+              )}
             </div>
 
-            <div className="grid gap-5 lg:grid-cols-2">
+            <fieldset disabled={locked} className="grid gap-5 lg:grid-cols-2">
               <div className="space-y-4">
                 <div>
                   <label className="label">First aid done?</label>
@@ -112,7 +116,7 @@ export default function StepInjuryReports({ persons = [], value = [], onChange, 
                 <label className="label">Injured body part(s)</label>
                 <BodyMap value={r.bodyParts || []} onChange={(bodyParts) => setReport(p, { bodyParts })} />
               </div>
-            </div>
+            </fieldset>
           </div>
         )
       })}

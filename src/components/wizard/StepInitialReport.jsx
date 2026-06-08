@@ -7,10 +7,10 @@ function FieldLabel({ icon: Icon, children }) {
 }
 
 /** Step 1 — Initial Incident Report form. `value`/`onChange` controlled by the wizard. */
-export default function StepInitialReport({ value, onChange, users }) {
+export default function StepInitialReport({ value, onChange, users, readOnly = false }) {
   const set = (patch) => onChange({ ...value, ...patch })
   return (
-    <div className="space-y-5">
+    <fieldset disabled={readOnly} className="space-y-5">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <FieldLabel icon={Calendar}>Date of incident</FieldLabel>
@@ -79,6 +79,6 @@ export default function StepInitialReport({ value, onChange, users }) {
         <p className="mb-2 text-xs text-ink-400">Add everyone involved — internal staff or external parties.</p>
         <PersonEditor value={value.affectedPersonnel || []} onChange={(affectedPersonnel) => set({ affectedPersonnel })} users={users} />
       </div>
-    </div>
+    </fieldset>
   )
 }
