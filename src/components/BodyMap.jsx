@@ -18,7 +18,7 @@ const FRONT = [
   { key: 'shoulder_r', el: <ellipse cx="132" cy="80" rx="13" ry="11" /> },
   { key: 'chest', el: <rect x="72" y="74" width="56" height="40" rx="14" /> },
   { key: 'abdomen', el: <rect x="75" y="116" width="50" height="38" rx="10" /> },
-  { key: 'pelvis', el: <path d="M76 156 H124 L118 192 H82 Z" /> },
+  { key: 'pelvis', el: <path d="M76 156 H124 L118 192 H82 Z" />, c: [100, 173] },
   { key: 'arm_l', el: <rect x="52" y="82" width="14" height="118" rx="7" /> },
   { key: 'arm_r', el: <rect x="134" y="82" width="14" height="118" rx="7" /> },
   { key: 'hand_l', el: <ellipse cx="59" cy="212" rx="10" ry="13" /> },
@@ -36,14 +36,36 @@ const FRONT = [
   { key: 'elbow_r', el: <circle cx="141" cy="142" r="7" /> },
   { key: 'wrist_l', el: <circle cx="59" cy="198" r="6" /> },
   { key: 'wrist_r', el: <circle cx="141" cy="198" r="6" /> },
-  { key: 'thumb_l', el: <ellipse cx="50" cy="210" rx="3.2" ry="5" /> },
-  { key: 'thumb_r', el: <ellipse cx="150" cy="210" rx="3.2" ry="5" /> },
-  { key: 'fingers_l', el: <ellipse cx="59" cy="226" rx="9" ry="5" /> },
-  { key: 'fingers_r', el: <ellipse cx="141" cy="226" rx="9" ry="5" /> },
+  { key: 'thumb_l', el: <ellipse cx="50" cy="210" rx="3.2" ry="5" />, tiny: true },
+  { key: 'thumb_r', el: <ellipse cx="150" cy="210" rx="3.2" ry="5" />, tiny: true },
+  { key: 'fingers_l', el: <ellipse cx="59" cy="226" rx="9" ry="5" />, tiny: true },
+  { key: 'fingers_r', el: <ellipse cx="141" cy="226" rx="9" ry="5" />, tiny: true },
   { key: 'hip_l', el: <circle cx="86" cy="190" r="7" /> },
   { key: 'hip_r', el: <circle cx="114" cy="190" r="7" /> },
   { key: 'ankle_l', el: <circle cx="89" cy="346" r="6" /> },
   { key: 'ankle_r', el: <circle cx="111" cy="346" r="6" /> },
+  // Specific fingers (left hand) — tiny tips below the hand
+  { key: 'finger_l_index', el: <ellipse cx="53.5" cy="231" rx="1.7" ry="3.4" />, tiny: true },
+  { key: 'finger_l_middle', el: <ellipse cx="57.5" cy="233" rx="1.7" ry="3.6" />, tiny: true },
+  { key: 'finger_l_ring', el: <ellipse cx="61.5" cy="232" rx="1.7" ry="3.4" />, tiny: true },
+  { key: 'finger_l_little', el: <ellipse cx="65" cy="229" rx="1.5" ry="2.8" />, tiny: true },
+  // Specific fingers (right hand)
+  { key: 'finger_r_index', el: <ellipse cx="146.5" cy="231" rx="1.7" ry="3.4" />, tiny: true },
+  { key: 'finger_r_middle', el: <ellipse cx="142.5" cy="233" rx="1.7" ry="3.6" />, tiny: true },
+  { key: 'finger_r_ring', el: <ellipse cx="138.5" cy="232" rx="1.7" ry="3.4" />, tiny: true },
+  { key: 'finger_r_little', el: <ellipse cx="135" cy="229" rx="1.5" ry="2.8" />, tiny: true },
+  // Specific toes (left foot) — tiny tips below the foot
+  { key: 'toe_l_big', el: <ellipse cx="79" cy="362" rx="2" ry="2.4" />, tiny: true },
+  { key: 'toe_l_2', el: <ellipse cx="83" cy="363" rx="1.5" ry="2.2" />, tiny: true },
+  { key: 'toe_l_3', el: <ellipse cx="86.5" cy="364" rx="1.5" ry="2.2" />, tiny: true },
+  { key: 'toe_l_4', el: <ellipse cx="90" cy="363" rx="1.4" ry="2" />, tiny: true },
+  { key: 'toe_l_little', el: <ellipse cx="93" cy="361" rx="1.3" ry="1.8" />, tiny: true },
+  // Specific toes (right foot)
+  { key: 'toe_r_big', el: <ellipse cx="121" cy="362" rx="2" ry="2.4" />, tiny: true },
+  { key: 'toe_r_2', el: <ellipse cx="117" cy="363" rx="1.5" ry="2.2" />, tiny: true },
+  { key: 'toe_r_3', el: <ellipse cx="113.5" cy="364" rx="1.5" ry="2.2" />, tiny: true },
+  { key: 'toe_r_4', el: <ellipse cx="110" cy="363" rx="1.4" ry="2" />, tiny: true },
+  { key: 'toe_r_little', el: <ellipse cx="107" cy="361" rx="1.3" ry="1.8" />, tiny: true },
 ]
 
 const BACK = [
@@ -52,7 +74,7 @@ const BACK = [
   { key: 'shoulder_r', el: <ellipse cx="132" cy="80" rx="13" ry="11" /> },
   { key: 'back_upper', el: <rect x="72" y="74" width="56" height="44" rx="12" /> },
   { key: 'back_lower', el: <rect x="75" y="120" width="50" height="36" rx="10" /> },
-  { key: 'buttocks', el: <path d="M76 158 H124 L118 196 H82 Z" /> },
+  { key: 'buttocks', el: <path d="M76 158 H124 L118 196 H82 Z" />, c: [100, 176] },
   { key: 'arm_l', el: <rect x="52" y="82" width="14" height="118" rx="7" /> },
   { key: 'arm_r', el: <rect x="134" y="82" width="14" height="118" rx="7" /> },
   { key: 'hand_l', el: <ellipse cx="59" cy="212" rx="10" ry="13" /> },
@@ -74,11 +96,11 @@ const BACK = [
 const INTERNAL = [
   { key: 'brain', el: <ellipse cx="100" cy="30" rx="19" ry="21" /> },
   { key: 'spine', el: <rect x="96" y="58" width="8" height="150" rx="4" /> },
-  { key: 'lung', el: <g><path d="M96 86 q-22 4 -20 44 q14 6 20 -2 Z" /><path d="M104 86 q22 4 20 44 q-14 6 -20 -2 Z" /></g> },
-  { key: 'heart', el: <path d="M104 96 q10 -10 16 0 q4 12 -16 22 q-20 -10 -16 -22 q6 -10 16 0 Z" /> },
-  { key: 'liver', el: <path d="M74 132 H112 q4 16 -18 22 q-22 0 -20 -22 Z" /> },
+  { key: 'lung', el: <g><path d="M96 86 q-22 4 -20 44 q14 6 20 -2 Z" /><path d="M104 86 q22 4 20 44 q-14 6 -20 -2 Z" /></g>, c: [100, 112] },
+  { key: 'heart', el: <path d="M104 96 q10 -10 16 0 q4 12 -16 22 q-20 -10 -16 -22 q6 -10 16 0 Z" />, c: [105, 110] },
+  { key: 'liver', el: <path d="M74 132 H112 q4 16 -18 22 q-22 0 -20 -22 Z" />, c: [91, 143] },
   { key: 'stomach', el: <ellipse cx="116" cy="140" rx="12" ry="14" /> },
-  { key: 'kidney', el: <g><ellipse cx="84" cy="162" rx="7" ry="11" /><ellipse cx="116" cy="162" rx="7" ry="11" /></g> },
+  { key: 'kidney', el: <g><ellipse cx="84" cy="162" rx="7" ry="11" /><ellipse cx="116" cy="162" rx="7" ry="11" /></g>, c: [100, 162] },
   { key: 'intestine', el: <rect x="78" y="172" width="44" height="34" rx="14" /> },
 ]
 
@@ -97,6 +119,15 @@ function Silhouette({ view }) {
   )
 }
 
+// Label position for a region: explicit `c`, else derived from the shape props.
+function centerOf(region) {
+  if (region.c) return region.c
+  const p = region.el?.props || {}
+  if (p.cx != null && p.cy != null) return [Number(p.cx), Number(p.cy)]
+  if (p.x != null && p.width != null) return [Number(p.x) + Number(p.width) / 2, Number(p.y) + Number(p.height) / 2]
+  return null
+}
+
 function Region({ region, mode, selected, count, max, onToggle }) {
   const heat = mode === 'heat'
   let fill, opacity
@@ -108,23 +139,33 @@ function Region({ region, mode, selected, count, max, onToggle }) {
     fill = selected ? '#4f46e5' : '#c7d2fe'
     opacity = selected ? 0.92 : 0.32
   }
+  // Count number on the heatmap (skip the tiny finger/toe spots to avoid clutter).
+  const center = heat && count > 0 && !region.tiny ? centerOf(region) : null
   return (
-    <motion.g
-      fill={fill}
-      fillOpacity={opacity}
-      stroke="#6366f1"
-      strokeOpacity={selected || (heat && count) ? 0.7 : 0.25}
-      strokeWidth="0.8"
-      onClick={onToggle ? () => onToggle(region.key) : undefined}
-      className={onToggle ? 'cursor-pointer' : ''}
-      whileHover={onToggle ? { scale: 1.04 } : undefined}
-      animate={selected ? { scale: [1, 1.05, 1] } : { scale: 1 }}
-      transition={{ duration: 0.3 }}
-      style={{ transformOrigin: 'center', transformBox: 'fill-box' }}
-    >
-      {region.el}
-      <title>{bodyPartLabel(region.key)}{heat ? `: ${count || 0}` : ''}</title>
-    </motion.g>
+    <g>
+      <motion.g
+        fill={fill}
+        fillOpacity={opacity}
+        stroke="#6366f1"
+        strokeOpacity={selected || (heat && count) ? 0.7 : 0.25}
+        strokeWidth="0.8"
+        onClick={onToggle ? () => onToggle(region.key) : undefined}
+        className={onToggle ? 'cursor-pointer' : ''}
+        whileHover={onToggle ? { scale: 1.04 } : undefined}
+        animate={selected ? { scale: [1, 1.05, 1] } : { scale: 1 }}
+        transition={{ duration: 0.3 }}
+        style={{ transformOrigin: 'center', transformBox: 'fill-box' }}
+      >
+        {region.el}
+        <title>{bodyPartLabel(region.key)}{heat ? `: ${count || 0}` : ''}</title>
+      </motion.g>
+      {center && (
+        <g pointerEvents="none">
+          <circle cx={center[0]} cy={center[1]} r="6" fill="#fff" stroke="#4f46e5" strokeWidth="0.6" />
+          <text x={center[0]} y={center[1]} fontSize="7" fontWeight="800" fill="#3730a3" textAnchor="middle" dominantBaseline="central">{count}</text>
+        </g>
+      )}
+    </g>
   )
 }
 
@@ -234,10 +275,34 @@ export default function BodyMap({ value = [], onChange, height = 320 }) {
  */
 export function BodyHeatmap({ counts = {}, onSelect, height = 300 }) {
   const [view, setView] = useState('front')
+  // Ranked list of every affected part with its injury count (covers tiny
+  // fingers/toes whose number can't legibly sit on the figure).
+  const ranked = Object.entries(counts)
+    .filter(([, n]) => n > 0)
+    .sort((a, b) => b[1] - a[1])
   return (
     <div className="space-y-3">
       <ViewTabs view={view} setView={setView} />
       <BodyFigure view={view} mode="heat" counts={counts} onToggle={onSelect} height={height} />
+      {ranked.length > 0 && (
+        <div>
+          <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-ink-400">Injuries by body part</p>
+          <div className="flex flex-wrap gap-1.5">
+            {ranked.map(([k, n]) => (
+              <button
+                key={k}
+                type="button"
+                onClick={onSelect ? () => onSelect(k) : undefined}
+                className={`chip bg-clay-100 text-ink-700 ${onSelect ? 'hover:bg-clay-200' : 'cursor-default'}`}
+                title={`${bodyPartLabel(k)}: ${n}`}
+              >
+                {bodyPartLabel(k)}
+                <span className="ml-1 grid h-4 min-w-4 place-items-center rounded-full bg-brand-500 px-1 text-[10px] font-extrabold text-white">{n}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
