@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app'
 import { getAuth, setPersistence, browserSessionPersistence } from 'firebase/auth'
-import { getFirestore } from 'firebase/firestore'
+import { initializeFirestore } from 'firebase/firestore'
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -27,7 +27,12 @@ if (!isFirebaseConfigured) {
 // Export nulls until real config is supplied.
 const app = isFirebaseConfigured ? initializeApp(firebaseConfig) : null
 export const auth = app ? getAuth(app) : null
-export const db = app ? getFirestore(app) : null
+// initializeFirestore (not getFirestore) so we can auto-detect when the network
+// needs long-polling: behind some VPNs, proxies and corporate/restrictive
+// networks the default WebChannel streaming connection is blocked, which makes
+// reads/writes hang or fail. Auto-detect transparently falls back to long
+// polling on those networks while keeping the faster transport everywhere else.
+export const db = app ? initializeFirestore(app, { experimentalAutoDetectLongPolling: true }) : null
 
 // Use session persistence (sessionStorage): the login is dropped when the tab /
 // browser is closed, so reopening requires signing in again. A same-tab reload

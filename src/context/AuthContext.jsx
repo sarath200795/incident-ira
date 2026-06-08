@@ -17,6 +17,25 @@ import {
 
 const AuthContext = createContext(null)
 
+// Transient network blips (flaky Wi‑Fi, a VPN reconnecting, a proxy hiccup)
+// surface from Firebase Auth as `auth/network-request-failed`. Retry a couple of
+// times with a short backoff so a single dropped request doesn't fail the whole
+// sign-in / registration. Other errors (wrong password, email-in-use) throw
+// immediately — we only retry the network code.
+async function withNetworkRetry(fn, tries = 3) {
+  let lastErr
+  for (let i = 0; i < tries; i++) {
+    try {
+      return await fn()
+    } catch (err) {
+      lastErr = err
+      if (err?.code !== 'auth/network-request-failed' || i === tries - 1) throw err
+      await new Promise((r) => setTimeout(r, 700 * (i + 1)))
+    }
+  }
+  throw lastErr
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null) // firebase auth user
   const [profile, setProfile] = useState(null) // users/{uid} doc
@@ -50,7 +69,7 @@ export function AuthProvider({ children }) {
   // NOTE: create the auth user FIRST so the org-name lookup runs authenticated —
   // Firestore rules require sign-in to read `organizations`.
   const registerOrganization = async ({ orgName, address, name, email, password }) => {
-    const cred = await createUserWithEmailAndPassword(auth, email, password)
+    const cred = await withNetworkRetry(() => createUserWithEmailAndPassword(auth, email, password))
     try {
       const existing = await findOrgByName(orgName)
       if (existing) {
@@ -70,7 +89,7 @@ export function AuthProvider({ children }) {
   // chosen from a dropdown, so we receive its id directly — no name lookup.
   const signUpMember = async ({ orgId, orgName, name, email, password }) => {
     if (!orgId) throw new Error('Please select your organization.')
-    const cred = await createUserWithEmailAndPassword(auth, email, password)
+    const cred = await withNetworkRetry(() => createUserWithEmailAndPassword(auth, email, password))
     try {
       await updateProfile(cred.user, { displayName: name })
       await createPendingMember({
@@ -88,7 +107,7 @@ export function AuthProvider({ children }) {
   }
 
   const login = async ({ email, password }) => {
-    const cred = await signInWithEmailAndPassword(auth, email, password)
+    const cred = await withNetworkRetry(() => signInWithEmailAndPassword(auth, email, password))
     await refreshProfile(cred.user.uid)
   }
 
