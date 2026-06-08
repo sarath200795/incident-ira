@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app'
-import { getAuth, setPersistence, browserSessionPersistence } from 'firebase/auth'
+import { getAuth, setPersistence, browserSessionPersistence, inMemoryPersistence } from 'firebase/auth'
 import { initializeFirestore } from 'firebase/firestore'
 
 const firebaseConfig = {
@@ -38,10 +38,15 @@ export const db = app ? initializeFirestore(app, { experimentalAutoDetectLongPol
 // browser is closed, so reopening requires signing in again. A same-tab reload
 // keeps the session (sessionStorage survives reloads of the same tab).
 if (auth) {
-  setPersistence(auth, browserSessionPersistence).catch((e) => {
-    // eslint-disable-next-line no-console
-    console.warn('[Incident IRA] could not set session persistence:', e?.message || e)
-  })
+  // Prefer session persistence (login drops when the tab/browser closes). If the
+  // browser blocks site storage (sessionStorage), fall back to in-memory so the
+  // user can still sign in for this tab instead of auth failing outright.
+  setPersistence(auth, browserSessionPersistence).catch(() =>
+    setPersistence(auth, inMemoryPersistence).catch((e) => {
+      // eslint-disable-next-line no-console
+      console.warn('[Incident IRA] could not set auth persistence:', e?.message || e)
+    })
+  )
 }
 
 export default app

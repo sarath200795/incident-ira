@@ -18,10 +18,11 @@ import {
 const AuthContext = createContext(null)
 
 // Transient network blips (flaky Wi‑Fi, a VPN reconnecting, a proxy hiccup)
-// surface from Firebase Auth as `auth/network-request-failed`. Retry a couple of
-// times with a short backoff so a single dropped request doesn't fail the whole
-// sign-in / registration. Other errors (wrong password, email-in-use) throw
-// immediately — we only retry the network code.
+// surface as `auth/network-request-failed` (Auth) or `unavailable` /
+// `deadline-exceeded` (Firestore). Retry a few times with backoff so a single
+// dropped request doesn't fail the whole sign-in / registration. Deterministic
+// errors (wrong password, email-in-use, permission-denied) throw immediately.
+const TRANSIENT_CODES = new Set(['auth/network-request-failed', 'auth/timeout', 'unavailable', 'deadline-exceeded'])
 async function withNetworkRetry(fn, tries = 3) {
   let lastErr
   for (let i = 0; i < tries; i++) {
@@ -29,7 +30,7 @@ async function withNetworkRetry(fn, tries = 3) {
       return await fn()
     } catch (err) {
       lastErr = err
-      if (err?.code !== 'auth/network-request-failed' || i === tries - 1) throw err
+      if (!TRANSIENT_CODES.has(err?.code) || i === tries - 1) throw err
       await new Promise((r) => setTimeout(r, 700 * (i + 1)))
     }
   }
@@ -77,7 +78,7 @@ export function AuthProvider({ children }) {
       }
       await updateProfile(cred.user, { displayName: name })
       await createOrganization({ orgName, address, uid: cred.user.uid, name, email })
-      await refreshProfile(cred.user.uid)
+      await withNetworkRetry(() => refreshProfile(cred.user.uid))
     } catch (err) {
       // Roll back the half-created account so the email can be reused.
       await deleteUser(cred.user).catch(() => {})
@@ -99,7 +100,7 @@ export function AuthProvider({ children }) {
         orgId,
         orgName: orgName || '',
       })
-      await refreshProfile(cred.user.uid)
+      await withNetworkRetry(() => refreshProfile(cred.user.uid))
     } catch (err) {
       await deleteUser(cred.user).catch(() => {})
       throw err
@@ -108,7 +109,7 @@ export function AuthProvider({ children }) {
 
   const login = async ({ email, password }) => {
     const cred = await withNetworkRetry(() => signInWithEmailAndPassword(auth, email, password))
-    await refreshProfile(cred.user.uid)
+    await withNetworkRetry(() => refreshProfile(cred.user.uid))
   }
 
   const signOut = async () => {

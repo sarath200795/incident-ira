@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Mail, Lock, User, Building2, ArrowRight } from 'lucide-react'
+import { Mail, Lock, User, Building2, ArrowRight, WifiOff, Activity } from 'lucide-react'
 import toast from 'react-hot-toast'
 import AuthShell from '../components/AuthShell'
 import { Spinner } from '../components/ui'
 import { useAuth } from '../context/AuthContext'
-import { authErrorMessage } from '../lib/authErrors'
+import { authErrorMessage, isNetworkError } from '../lib/authErrors'
 import { listOrganizations } from '../lib/firestore'
 
 export default function Signup() {
@@ -13,6 +13,7 @@ export default function Signup() {
   const navigate = useNavigate()
   const [form, setForm] = useState({ orgId: '', name: '', email: '', password: '' })
   const [busy, setBusy] = useState(false)
+  const [netErr, setNetErr] = useState(false)
   const [orgs, setOrgs] = useState([])
   const [orgsLoading, setOrgsLoading] = useState(true)
   const [orgsError, setOrgsError] = useState(false)
@@ -30,6 +31,7 @@ export default function Signup() {
     e.preventDefault()
     if (!form.orgId) return toast.error('Select your organization')
     setBusy(true)
+    setNetErr(false)
     try {
       const org = orgs.find((o) => o.id === form.orgId)
       await signUpMember({ ...form, orgName: org?.name || '' })
@@ -37,6 +39,7 @@ export default function Signup() {
       navigate('/pending', { replace: true })
     } catch (err) {
       toast.error(authErrorMessage(err))
+      if (isNetworkError(err)) setNetErr(true)
     } finally {
       setBusy(false)
     }
@@ -56,6 +59,16 @@ export default function Signup() {
       <p className="mt-1 text-sm text-ink-500">
         Request access to an existing organization. An admin will approve you.
       </p>
+
+      {(netErr || orgsError) && (
+        <div className="mt-5 rounded-xl bg-red-50 p-3 text-sm text-red-700">
+          <p className="flex items-center gap-1.5 font-bold"><WifiOff size={15} /> Couldn't reach the service</p>
+          <p className="mt-1 text-xs text-red-600/90">A VPN, antivirus HTTPS scanning, ad-blocker, or firewall may be blocking Google. Run a quick check to find out.</p>
+          <Link to="/diagnostics" className="mt-2 inline-flex items-center gap-1 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700">
+            <Activity size={13} /> Run connection check
+          </Link>
+        </div>
+      )}
 
       {noOrgs ? (
         <div className="mt-7 rounded-2xl bg-clay-surface p-5 text-sm text-ink-600 shadow-clay-inset">

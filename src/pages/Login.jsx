@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { Mail, Lock, ArrowRight } from 'lucide-react'
+import { Mail, Lock, ArrowRight, WifiOff, Activity } from 'lucide-react'
 import toast from 'react-hot-toast'
 import AuthShell from '../components/AuthShell'
 import { Spinner } from '../components/ui'
 import { useAuth } from '../context/AuthContext'
-import { authErrorMessage } from '../lib/authErrors'
+import { authErrorMessage, isNetworkError } from '../lib/authErrors'
 
 export default function Login() {
   const { login } = useAuth()
@@ -13,16 +13,19 @@ export default function Login() {
   const location = useLocation()
   const [form, setForm] = useState({ email: '', password: '' })
   const [busy, setBusy] = useState(false)
+  const [netErr, setNetErr] = useState(false)
 
   const onSubmit = async (e) => {
     e.preventDefault()
     setBusy(true)
+    setNetErr(false)
     try {
       await login(form)
       toast.success('Welcome back!')
       navigate(location.state?.from?.pathname || '/app/dashboard', { replace: true })
     } catch (err) {
       toast.error(authErrorMessage(err))
+      if (isNetworkError(err)) setNetErr(true)
     } finally {
       setBusy(false)
     }
@@ -32,6 +35,16 @@ export default function Login() {
     <AuthShell>
       <h2 className="text-3xl font-extrabold tracking-tight text-ink-900">Sign in</h2>
       <p className="mt-1 text-sm text-ink-500">Access your organization's safety portal.</p>
+
+      {netErr && (
+        <div className="mt-5 rounded-xl bg-red-50 p-3 text-sm text-red-700">
+          <p className="flex items-center gap-1.5 font-bold"><WifiOff size={15} /> Couldn't reach the sign-in service</p>
+          <p className="mt-1 text-xs text-red-600/90">A VPN, antivirus HTTPS scanning, ad-blocker, or firewall may be blocking Google. Run a quick check to find out.</p>
+          <Link to="/diagnostics" className="mt-2 inline-flex items-center gap-1 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700">
+            <Activity size={13} /> Run connection check
+          </Link>
+        </div>
+      )}
 
       <form onSubmit={onSubmit} className="mt-8 space-y-4">
         <div>

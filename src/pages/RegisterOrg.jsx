@@ -1,27 +1,30 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Mail, Lock, User, Building2, MapPin, ArrowRight, ShieldCheck } from 'lucide-react'
+import { Mail, Lock, User, Building2, MapPin, ArrowRight, ShieldCheck, WifiOff, Activity } from 'lucide-react'
 import toast from 'react-hot-toast'
 import AuthShell from '../components/AuthShell'
 import { Spinner } from '../components/ui'
 import { useAuth } from '../context/AuthContext'
-import { authErrorMessage } from '../lib/authErrors'
+import { authErrorMessage, isNetworkError } from '../lib/authErrors'
 
 export default function RegisterOrg() {
   const { registerOrganization } = useAuth()
   const navigate = useNavigate()
   const [form, setForm] = useState({ orgName: '', address: '', name: '', email: '', password: '' })
   const [busy, setBusy] = useState(false)
+  const [netErr, setNetErr] = useState(false)
 
   const onSubmit = async (e) => {
     e.preventDefault()
     setBusy(true)
+    setNetErr(false)
     try {
       await registerOrganization(form)
       toast.success('Organization created — you are the admin!')
       navigate('/app/dashboard', { replace: true })
     } catch (err) {
       toast.error(authErrorMessage(err))
+      if (isNetworkError(err)) setNetErr(true)
     } finally {
       setBusy(false)
     }
@@ -41,6 +44,16 @@ export default function RegisterOrg() {
       <p className="mt-1 text-sm text-ink-500">
         Create your company workspace. The first account is the administrator and approves teammates.
       </p>
+
+      {netErr && (
+        <div className="mt-5 rounded-xl bg-red-50 p-3 text-sm text-red-700">
+          <p className="flex items-center gap-1.5 font-bold"><WifiOff size={15} /> Couldn't reach the sign-in service</p>
+          <p className="mt-1 text-xs text-red-600/90">A VPN, antivirus HTTPS scanning, ad-blocker, or firewall may be blocking Google. Run a quick check to find out.</p>
+          <Link to="/diagnostics" className="mt-2 inline-flex items-center gap-1 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700">
+            <Activity size={13} /> Run connection check
+          </Link>
+        </div>
+      )}
 
       <form onSubmit={onSubmit} className="mt-7 space-y-4">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

@@ -8,7 +8,13 @@ const MAP = {
   'auth/wrong-password': 'Incorrect email or password.',
   'auth/invalid-credential': 'Incorrect email or password.',
   'auth/too-many-requests': 'Too many attempts. Please wait a moment and try again.',
-  'auth/network-request-failed': 'Network error. Check your connection and try again.',
+  'auth/network-request-failed': "Couldn't reach the sign-in service. This is usually a VPN, antivirus HTTPS scanning, an ad-blocker, or a network firewall. Run the connection check below for details.",
+}
+
+// True when the error is the "can't reach Google" network failure — the auth
+// pages use this to surface the connection-check banner.
+export function isNetworkError(err) {
+  return err?.code === 'auth/network-request-failed'
 }
 
 export function authErrorMessage(err) {

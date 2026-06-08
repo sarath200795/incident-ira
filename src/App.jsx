@@ -14,6 +14,7 @@ const Signup = lazy(() => import('./pages/Signup'))
 const RegisterOrg = lazy(() => import('./pages/RegisterOrg'))
 const PendingApproval = lazy(() => import('./pages/PendingApproval'))
 const Legal = lazy(() => import('./pages/Legal'))
+const Diagnostics = lazy(() => import('./pages/Diagnostics'))
 
 const Dashboard = lazy(() => import('./pages/Dashboard'))
 const Incidents = lazy(() => import('./pages/Incidents'))
@@ -47,6 +48,7 @@ export default function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/register-org" element={<RegisterOrg />} />
           <Route path="/pending" element={<PendingApproval />} />
+          <Route path="/diagnostics" element={<Diagnostics />} />
           <Route path="/privacy" element={<Legal kind="privacy" />} />
           <Route path="/terms" element={<Legal kind="terms" />} />
           <Route path="/data-retention" element={<Legal kind="retention" />} />
