@@ -2,13 +2,20 @@ import { initializeApp } from 'firebase/app'
 import { getAuth, setPersistence, browserSessionPersistence, inMemoryPersistence } from 'firebase/auth'
 import { initializeFirestore } from 'firebase/firestore'
 
+// Strip a leading UTF-8 BOM, any zero-width characters, surrounding quotes, and
+// whitespace from an env value. Some build/deploy pipelines silently prepend a
+// BOM to env values (e.g. the API key / project id), which corrupts every
+// Firebase request and surfaces as auth/network-request-failed. Sanitizing here
+// makes the app resilient regardless of how the environment was set.
+const clean = (v) => (v == null ? '' : String(v).replace(/[​-‍﻿]/g, '').replace(/^["']|["']$/g, '').trim())
+
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  apiKey: clean(import.meta.env.VITE_FIREBASE_API_KEY),
+  authDomain: clean(import.meta.env.VITE_FIREBASE_AUTH_DOMAIN),
+  projectId: clean(import.meta.env.VITE_FIREBASE_PROJECT_ID),
+  storageBucket: clean(import.meta.env.VITE_FIREBASE_STORAGE_BUCKET),
+  messagingSenderId: clean(import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID),
+  appId: clean(import.meta.env.VITE_FIREBASE_APP_ID),
 }
 
 // True only when the essential web-config keys are present.
@@ -34,9 +41,6 @@ export const auth = app ? getAuth(app) : null
 // polling on those networks while keeping the faster transport everywhere else.
 export const db = app ? initializeFirestore(app, { experimentalAutoDetectLongPolling: true }) : null
 
-// Use session persistence (sessionStorage): the login is dropped when the tab /
-// browser is closed, so reopening requires signing in again. A same-tab reload
-// keeps the session (sessionStorage survives reloads of the same tab).
 if (auth) {
   // Prefer session persistence (login drops when the tab/browser closes). If the
   // browser blocks site storage (sessionStorage), fall back to in-memory so the

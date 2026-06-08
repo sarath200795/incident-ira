@@ -8,8 +8,11 @@
 // exactly what's wrong instead of a vague "check your connection".
 // ─────────────────────────────────────────────────────────────────────────────
 
-const API_KEY = import.meta.env.VITE_FIREBASE_API_KEY
-const PROJECT_ID = import.meta.env.VITE_FIREBASE_PROJECT_ID
+// Sanitize env values (strip BOM / zero-width / quotes / whitespace) — a BOM
+// injected by a deploy pipeline corrupts these and is exactly what we're testing.
+const clean = (v) => (v == null ? '' : String(v).replace(/[​-‍﻿]/g, '').replace(/^["']|["']$/g, '').trim())
+const API_KEY = clean(import.meta.env.VITE_FIREBASE_API_KEY)
+const PROJECT_ID = clean(import.meta.env.VITE_FIREBASE_PROJECT_ID)
 
 // Fetch a URL with a hard timeout. We distinguish three outcomes:
 //  - reachable: we got ANY HTTP response (even 400/401/403) → the path works.
