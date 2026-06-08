@@ -104,6 +104,23 @@ export default function Dashboard() {
     })
   }, [incidents, search, filters])
 
+  // Body-map counts derived from the CURRENTLY FILTERED set, so changing any
+  // filter (category, severity, …) updates the heatmap. Illnesses lack the
+  // incident dimensions, so they're only counted when no incident-only filter
+  // is active (still honouring an active location filter).
+  const bodyCounts = useMemo(() => {
+    const c = {}
+    for (const inc of filtered) for (const r of inc.injuryReports || []) for (const k of r.bodyParts || []) c[k] = (c[k] || 0) + 1
+    const incidentDimActive = filters.severity.size || filters.type.size || filters.category.size
+    if (!incidentDimActive) {
+      for (const ill of illnesses) {
+        if (filters.location.size && !filters.location.has(ill.location)) continue
+        for (const k of ill.affectedBodyParts || []) c[k] = (c[k] || 0) + 1
+      }
+    }
+    return c
+  }, [filtered, illnesses, filters])
+
   const sevData = useMemo(() => SEVERITY.map((s) => ({ name: s.label, key: s.key, value: filtered.filter((i) => i.severity === s.key).length, color: s.color })).filter((d) => d.value), [filtered])
   const typeData = useMemo(() => INCIDENT_TYPES.map((t) => ({ name: t.label, key: t.key, value: filtered.filter((i) => i.type === t.key).length, color: t.color })).filter((d) => d.value), [filtered])
   const catData = useMemo(() => HSE_CATEGORIES.map((c) => ({ name: c.label, key: c.key, value: filtered.filter((i) => i.category === c.key).length, color: c.color })).filter((d) => d.value).sort((a, b) => b.value - a.value), [filtered])
@@ -257,7 +274,7 @@ export default function Dashboard() {
 
         <ChartCard title="Injury / Illness Body Map" subtitle="Heat = affected count · click to filter">
           {Object.keys(bodyPartCounts).length ? (
-            <BodyHeatmap counts={bodyPartCounts} onSelect={(key) => toggle('body', key)} height={260} />
+            <BodyHeatmap counts={bodyCounts} onSelect={(key) => toggle('body', key)} height={260} />
           ) : (
             <div className="flex h-52 flex-col items-center justify-center text-ink-400"><ShieldCheck size={36} /><p className="mt-2 font-bold text-green-600">No injuries recorded</p></div>
           )}
