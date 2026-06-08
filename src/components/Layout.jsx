@@ -7,6 +7,7 @@ import {
   ClipboardList,
   PlusCircle,
   Activity,
+  HeartPulse,
   ListChecks,
   Users as UsersIcon,
   ScrollText,
@@ -18,6 +19,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useIncidents } from '../context/IncidentContext'
+import Assistant from './Assistant'
 import { Modal } from './ui'
 import { useIdleTimeout } from '../hooks/useIdleTimeout'
 import { IDLE_MS, WARN_MS, formatMMSS } from '../lib/session'
@@ -58,7 +60,7 @@ function NavItem({ to, icon: Icon, label, badge, onClick }) {
 
 export default function Layout() {
   const { profile, orgName, isAdmin, signOut } = useAuth()
-  const { pendingUsers, openActions, overdueActions, deletedIncidents } = useIncidents()
+  const { pendingUsers, openActions, overdueActions, deletedIncidents, pendingInjuries } = useIncidents()
   const navigate = useNavigate()
   const [mobileOpen, setMobileOpen] = useState(false)
 
@@ -102,6 +104,7 @@ export default function Layout() {
       </p>
       <NavItem to="/app/incidents/new" icon={PlusCircle} label="Report Incident" onClick={close} />
       <NavItem to="/app/illness" icon={Activity} label="Illness Reports" onClick={close} />
+      <NavItem to="/app/injuries" icon={HeartPulse} label="Injury Reports" badge={pendingInjuries.length} onClick={close} />
       <NavItem to="/app/actions" icon={ListChecks} label="Action Tracker" badge={actionBadge} onClick={close} />
 
       {isAdmin && (
@@ -213,6 +216,9 @@ export default function Layout() {
           </div>
         </div>
       </Modal>
+
+      {/* Sam — roaming safety guide */}
+      <Assistant />
     </div>
   )
 }

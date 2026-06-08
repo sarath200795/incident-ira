@@ -24,6 +24,7 @@ import {
   createIncident, updateIncident, getIncident, closeIncident,
   subscribeIncidentPhotos, addIncidentPhoto, deleteIncidentPhoto,
 } from '../lib/incidents'
+import { syncIncidentInjuries } from '../lib/injuries'
 
 // Forward-only lifecycle: never downgrade when revisiting an earlier step.
 const forwardLifecycle = (current, target) =>
@@ -151,6 +152,9 @@ export default function IncidentWizard() {
       await updateIncident(orgId, incident.id, { injuryReports }, { actor, summary: 'Updated injury reports' })
       const fresh = await getIncident(orgId, incident.id)
       setIncident(fresh)
+      // Mirror each injury into the standalone, verifiable Injury Reports collection.
+      await syncIncidentInjuries(orgId, fresh, injuryReports, actor).catch((e) =>
+        console.warn('[Incident IRA] injury sync skipped:', e?.message || e))
       toast.success('Injury reports saved')
       goStep(nextStep())
     } catch (e) {

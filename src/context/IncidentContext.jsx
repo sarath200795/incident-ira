@@ -3,6 +3,7 @@ import { useAuth } from './AuthContext'
 import { subscribeOrgUsers, subscribeOrg } from '../lib/firestore'
 import { subscribeIncidents, subscribeStats, INCIDENT_LOAD_CAP } from '../lib/incidents'
 import { subscribeIllnesses } from '../lib/illnesses'
+import { subscribeInjuries, injuryStatus } from '../lib/injuries'
 import { flattenActions, isActionOverdue, todayISO } from '../lib/actions'
 
 const IncidentContext = createContext(null)
@@ -17,6 +18,7 @@ export function IncidentProvider({ children }) {
   const { orgId, user } = useAuth()
   const [incidents, setIncidents] = useState([])
   const [illnesses, setIllnesses] = useState([])
+  const [injuries, setInjuries] = useState([])
   const [users, setUsers] = useState([])
   const [org, setOrg] = useState(null)
   const [stats, setStats] = useState(null)
@@ -32,7 +34,8 @@ export function IncidentProvider({ children }) {
     const u3 = subscribeOrgUsers(orgId, setUsers)
     const u4 = subscribeOrg(orgId, setOrg)
     const u5 = subscribeStats(orgId, setStats)
-    return () => { u1(); u2(); u3(); u4(); u5() }
+    const u6 = subscribeInjuries(orgId, setInjuries)
+    return () => { u1(); u2(); u3(); u4(); u5(); u6() }
   }, [orgId])
 
   const value = useMemo(() => {
@@ -58,6 +61,8 @@ export function IncidentProvider({ children }) {
       for (const key of ill.affectedBodyParts || []) bodyPartCounts[key] = (bodyPartCounts[key] || 0) + 1
     }
 
+    const pendingInjuries = injuries.filter((i) => injuryStatus(i) !== 'verified')
+
     return {
       loading,
       org,
@@ -68,6 +73,8 @@ export function IncidentProvider({ children }) {
       deletedIncidents,
       illnesses: activeIll,
       deletedIllnesses,
+      injuries,
+      pendingInjuries,
       allActions,
       openActions,
       overdueActions,
@@ -76,7 +83,7 @@ export function IncidentProvider({ children }) {
       capped: incidents.length >= INCIDENT_LOAD_CAP,
       loadCap: INCIDENT_LOAD_CAP,
     }
-  }, [incidents, illnesses, users, org, stats, loading, user])
+  }, [incidents, illnesses, injuries, users, org, stats, loading, user])
 
   return <IncidentContext.Provider value={value}>{children}</IncidentContext.Provider>
 }

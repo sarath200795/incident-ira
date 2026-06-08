@@ -106,6 +106,13 @@ service cloud.firestore {
         }
       }
 
+      // ── Injury reports (standalone, per-person; mirrored from incidents) ──
+      match /injuries/{injuryId} {
+        allow read: if isApprovedMemberOf(orgId);
+        allow create, update: if isApprovedMemberOf(orgId);
+        allow delete: if isApprovedMemberOf(orgId);
+      }
+
       // ── Audit log ── append-only, immutable.
       match /auditLogs/{logId} {
         allow read: if isApprovedMemberOf(orgId);

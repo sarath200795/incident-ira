@@ -21,6 +21,7 @@ const Incidents = lazy(() => import('./pages/Incidents'))
 const IncidentWizard = lazy(() => import('./pages/IncidentWizard'))
 const Illnesses = lazy(() => import('./pages/Illnesses'))
 const IllnessWizard = lazy(() => import('./pages/IllnessWizard'))
+const Injuries = lazy(() => import('./pages/Injuries'))
 const ActionTracker = lazy(() => import('./pages/ActionTracker'))
 const Users = lazy(() => import('./pages/Users'))
 const AuditLog = lazy(() => import('./pages/AuditLog'))
@@ -63,6 +64,7 @@ export default function App() {
             <Route path="illness" element={<Illnesses />} />
             <Route path="illness/new" element={<IllnessWizard />} />
             <Route path="illness/:id" element={<IllnessWizard />} />
+            <Route path="injuries" element={<Injuries />} />
             <Route path="actions" element={<ActionTracker />} />
             <Route path="users" element={<ProtectedRoute adminOnly><Users /></ProtectedRoute>} />
             <Route path="audit" element={<ProtectedRoute adminOnly><AuditLog /></ProtectedRoute>} />

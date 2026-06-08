@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { BODY_VIEWS, BODY_PART_BY_KEY, bodyPartLabel } from '../lib/constants'
+import { BODY_VIEWS, BODY_PARTS, BODY_PART_BY_KEY, bodyPartLabel } from '../lib/constants'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Interactive human-body SVG. Each region's id is a BODY_PARTS key, so the
@@ -31,6 +31,19 @@ const FRONT = [
   { key: 'lowerleg_r', el: <rect x="104" y="272" width="14" height="72" rx="7" /> },
   { key: 'foot_l', el: <ellipse cx="87" cy="354" rx="12" ry="8" /> },
   { key: 'foot_r', el: <ellipse cx="113" cy="354" rx="12" ry="8" /> },
+  // Joints & extremities (small hotspots, drawn last so they sit on top)
+  { key: 'elbow_l', el: <circle cx="59" cy="142" r="7" /> },
+  { key: 'elbow_r', el: <circle cx="141" cy="142" r="7" /> },
+  { key: 'wrist_l', el: <circle cx="59" cy="198" r="6" /> },
+  { key: 'wrist_r', el: <circle cx="141" cy="198" r="6" /> },
+  { key: 'thumb_l', el: <ellipse cx="50" cy="210" rx="3.2" ry="5" /> },
+  { key: 'thumb_r', el: <ellipse cx="150" cy="210" rx="3.2" ry="5" /> },
+  { key: 'fingers_l', el: <ellipse cx="59" cy="226" rx="9" ry="5" /> },
+  { key: 'fingers_r', el: <ellipse cx="141" cy="226" rx="9" ry="5" /> },
+  { key: 'hip_l', el: <circle cx="86" cy="190" r="7" /> },
+  { key: 'hip_r', el: <circle cx="114" cy="190" r="7" /> },
+  { key: 'ankle_l', el: <circle cx="89" cy="346" r="6" /> },
+  { key: 'ankle_r', el: <circle cx="111" cy="346" r="6" /> },
 ]
 
 const BACK = [
@@ -50,6 +63,12 @@ const BACK = [
   { key: 'calf_r', el: <rect x="104" y="272" width="14" height="72" rx="7" /> },
   { key: 'foot_l', el: <ellipse cx="87" cy="354" rx="12" ry="8" /> },
   { key: 'foot_r', el: <ellipse cx="113" cy="354" rx="12" ry="8" /> },
+  { key: 'elbow_l', el: <circle cx="59" cy="142" r="7" /> },
+  { key: 'elbow_r', el: <circle cx="141" cy="142" r="7" /> },
+  { key: 'wrist_l', el: <circle cx="59" cy="198" r="6" /> },
+  { key: 'wrist_r', el: <circle cx="141" cy="198" r="6" /> },
+  { key: 'ankle_l', el: <circle cx="89" cy="346" r="6" /> },
+  { key: 'ankle_r', el: <circle cx="111" cy="346" r="6" /> },
 ]
 
 const INTERNAL = [
@@ -165,6 +184,29 @@ export default function BodyMap({ value = [], onChange, height = 320 }) {
       <div className="rounded-2xl bg-clay-surface p-3 shadow-clay-inset">
         <BodyFigure view={view} mode="select" value={value} onToggle={toggle} height={height} />
       </div>
+      {/* Dropdown fallback — reaches every part (fingers, wrists, joints, organs) even if hard to tap on the figure. */}
+      <select
+        className="input"
+        value=""
+        onChange={(e) => { if (e.target.value) toggle(e.target.value) }}
+      >
+        <option value="">Add a body part from the list…</option>
+        <optgroup label="External — front">
+          {BODY_PARTS.filter((b) => b.group === 'external' && b.view === 'front').map((b) => (
+            <option key={b.key} value={b.key} disabled={value.includes(b.key)}>{b.label}</option>
+          ))}
+        </optgroup>
+        <optgroup label="External — back">
+          {BODY_PARTS.filter((b) => b.group === 'external' && b.view === 'back').map((b) => (
+            <option key={b.key} value={b.key} disabled={value.includes(b.key)}>{b.label}</option>
+          ))}
+        </optgroup>
+        <optgroup label="Internal organs">
+          {BODY_PARTS.filter((b) => b.group === 'internal').map((b) => (
+            <option key={b.key} value={b.key} disabled={value.includes(b.key)}>{b.label}</option>
+          ))}
+        </optgroup>
+      </select>
       {value.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {value.map((k) => (

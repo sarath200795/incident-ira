@@ -22,6 +22,7 @@ const MATRIX = {
   'illness.report': ['reporter', 'investigator'],
   'illness.delete': [],
   'action.manage': ['investigator'], // create / update / close actions
+  'injury.verify': ['investigator'], // verify standalone injury reports
   'user.manage': [],
   'audit.view': [],
   'recycle.manage': [],
