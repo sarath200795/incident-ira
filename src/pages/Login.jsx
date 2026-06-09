@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Mail, Lock, ArrowRight, WifiOff, Activity } from 'lucide-react'
 import toast from 'react-hot-toast'
 import AuthShell from '../components/AuthShell'
@@ -10,15 +10,14 @@ import { authErrorMessage, isNetworkError } from '../lib/authErrors'
 export default function Login() {
   const { login, isAuthed, isApproved } = useAuth()
   const navigate = useNavigate()
-  const location = useLocation()
   const [form, setForm] = useState({ email: '', password: '' })
   const [busy, setBusy] = useState(false)
   const [netErr, setNetErr] = useState(false)
 
-  // Already signed in (e.g. session persisted, or just logged in) → go to the app.
+  // Always land on the dashboard after signing in (incl. a persisted session).
   useEffect(() => {
-    if (isAuthed && isApproved) navigate(location.state?.from?.pathname || '/app/dashboard', { replace: true })
-  }, [isAuthed, isApproved, navigate, location.state])
+    if (isAuthed && isApproved) navigate('/app/dashboard', { replace: true })
+  }, [isAuthed, isApproved, navigate])
 
   const onSubmit = async (e) => {
     e.preventDefault()
@@ -27,7 +26,7 @@ export default function Login() {
     try {
       await login(form)
       toast.success('Welcome back!')
-      navigate(location.state?.from?.pathname || '/app/dashboard', { replace: true })
+      navigate('/app/dashboard', { replace: true })
     } catch (err) {
       toast.error(authErrorMessage(err))
       if (isNetworkError(err)) setNetErr(true)
