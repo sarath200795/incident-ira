@@ -63,7 +63,7 @@ function Canvas({ method, initial, onChange, flowRef }) {
         >
           <Background color="#cbd5e1" gap={18} />
           <Controls showInteractive={false} />
-          <MiniMap pannable zoomable nodeColor={(n) => n.data?.color || '#6366f1'} />
+          <MiniMap pannable zoomable nodeColor={(n) => n.data?.color || '#795548'} />
         </ReactFlow>
       </div>
     </div>

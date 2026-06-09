@@ -20,7 +20,7 @@ import {
 
 const DIMS = ['severity', 'type', 'category', 'location', 'body']
 const emptyFilters = () => ({ severity: new Set(), type: new Set(), category: new Set(), location: new Set(), body: new Set() })
-const LOC_COLORS = ['#6366f1', '#0891b2', '#16a34a', '#f59e0b', '#ec4899', '#8b5cf6', '#ef4444', '#14b8a6', '#f97316', '#64748b', '#0ea5e9']
+const LOC_COLORS = ['#795548', '#0891b2', '#16a34a', '#f59e0b', '#ec4899', '#8b5cf6', '#ef4444', '#14b8a6', '#f97316', '#64748b', '#0ea5e9']
 const locColor = (loc) => LOC_COLORS[LOCATIONS.indexOf(loc) % LOC_COLORS.length] || '#64748b'
 
 const card = { hidden: { opacity: 0, y: 16 }, show: (i) => ({ opacity: 1, y: 0, transition: { delay: i * 0.05 } }) }
@@ -66,7 +66,7 @@ function chipMeta(dim, value) {
   if (dim === 'type') return { label: INCIDENT_TYPE_BY_KEY[value]?.label || value, color: INCIDENT_TYPE_BY_KEY[value]?.color }
   if (dim === 'category') return { label: HSE_CATEGORY_BY_KEY[value]?.label || value, color: HSE_CATEGORY_BY_KEY[value]?.color }
   if (dim === 'location') return { label: value, color: locColor(value) }
-  if (dim === 'body') return { label: bodyPartLabel(value), color: '#4f46e5' }
+  if (dim === 'body') return { label: bodyPartLabel(value), color: '#6d4c41' }
   return { label: value, color: '#64748b' }
 }
 
@@ -132,10 +132,10 @@ export default function Dashboard() {
   const closedCount = filtered.filter((i) => i.lifecycle === 'closed').length
 
   const kpis = [
-    { label: 'Total Incidents', value: filtered.length, color: '#4f46e5', icon: ClipboardList, onClick: clearAll },
+    { label: 'Total Incidents', value: filtered.length, color: '#6d4c41', icon: ClipboardList, onClick: clearAll },
     { label: 'Open', value: openCount, color: '#f59e0b', icon: Activity },
     { label: 'Closed', value: closedCount, color: '#16a34a', icon: CheckCircle2 },
-    { label: 'Open Actions', value: actionSummary.open + actionSummary.in_progress, color: '#6366f1', icon: ListChecks, to: '/app/actions' },
+    { label: 'Open Actions', value: actionSummary.open + actionSummary.in_progress, color: '#795548', icon: ListChecks, to: '/app/actions' },
     { label: 'Overdue Actions', value: actionSummary.overdue, color: '#dc2626', icon: AlertTriangle, to: '/app/actions' },
     { label: 'Illnesses', value: illnesses.length, color: '#0891b2', icon: ShieldCheck, to: '/app/illness' },
   ]

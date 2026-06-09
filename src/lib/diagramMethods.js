@@ -41,7 +41,7 @@ export const METHODS = {
     flow: 'vertical',
     makeTemplate(incident) {
       const problem = N('problem', `Problem: ${short(incident?.narrative) || '…'}`, 'root', 'vertical', '#dc2626', { x: 260, y: 0 })
-      const why1 = N(nid(), 'Why did this happen?', 'box', 'vertical', '#6366f1', { x: 260, y: 130 })
+      const why1 = N(nid(), 'Why did this happen?', 'box', 'vertical', '#795548', { x: 260, y: 130 })
       return { nodes: [problem, why1], edges: [E(problem.id, why1.id)] }
     },
     toolbar: [
@@ -51,7 +51,7 @@ export const METHODS = {
       { label: 'Add Why', run({ nodes, edges, selected }) {
         const parent = selected || lastVertical(nodes)
         const siblings = edges.filter((e) => e.source === parent?.id).length
-        const node = N(nid(), 'Why?', 'box', 'vertical', '#6366f1', {
+        const node = N(nid(), 'Why?', 'box', 'vertical', '#795548', {
           x: (parent?.position.x ?? 260) + siblings * 190,
           y: (parent?.position.y ?? 0) + 130,
         })
@@ -91,7 +91,7 @@ export const METHODS = {
       const effect = N('effect', `Effect: ${short(incident?.narrative, 40) || '…'}`, 'diamond', 'horizontal', '#dc2626', { x: 720, y: 190 })
       const cats = ['Man', 'Machine', 'Method', 'Material', 'Measurement', 'Environment']
       const pos = [[120, 30], [360, 30], [560, 30], [120, 360], [360, 360], [560, 360]]
-      const catNodes = cats.map((c, i) => N(`cat_${c.toLowerCase()}`, c, 'box', 'horizontal', '#6366f1', { x: pos[i][0], y: pos[i][1] }))
+      const catNodes = cats.map((c, i) => N(`cat_${c.toLowerCase()}`, c, 'box', 'horizontal', '#795548', { x: pos[i][0], y: pos[i][1] }))
       const edges = catNodes.map((c) => E(c.id, effect.id))
       return { nodes: [effect, ...catNodes], edges }
     },
@@ -139,12 +139,12 @@ export const METHODS = {
     flow: 'vertical',
     makeTemplate() {
       const top = N('top', 'Top Event', 'box', 'vertical', '#dc2626', { x: 300, y: 0 })
-      const gate = N(nid(), 'Gate', 'gate', 'vertical', '#6366f1', { x: 300, y: 130 }, { gateType: 'OR' })
+      const gate = N(nid(), 'Gate', 'gate', 'vertical', '#795548', { x: 300, y: 130 }, { gateType: 'OR' })
       return { nodes: [top, gate], edges: [E(top.id, gate.id)] }
     },
     toolbar: [
-      { label: 'AND Gate', run({ nodes }) { return { nodes: [N(nid(), 'Gate', 'gate', 'vertical', '#6366f1', { x: 120 + nodes.length * 20, y: 260 }, { gateType: 'AND' })], edges: [] } } },
-      { label: 'OR Gate', run({ nodes }) { return { nodes: [N(nid(), 'Gate', 'gate', 'vertical', '#6366f1', { x: 120 + nodes.length * 20, y: 260 }, { gateType: 'OR' })], edges: [] } } },
+      { label: 'AND Gate', run({ nodes }) { return { nodes: [N(nid(), 'Gate', 'gate', 'vertical', '#795548', { x: 120 + nodes.length * 20, y: 260 }, { gateType: 'AND' })], edges: [] } } },
+      { label: 'OR Gate', run({ nodes }) { return { nodes: [N(nid(), 'Gate', 'gate', 'vertical', '#795548', { x: 120 + nodes.length * 20, y: 260 }, { gateType: 'OR' })], edges: [] } } },
       { label: 'Basic Event', run({ nodes }) { return { nodes: [N(nid(), 'Basic event', 'circle', 'vertical', '#16a34a', { x: 120 + nodes.length * 20, y: 400 })], edges: [] } } },
       { label: 'Intermediate', run({ nodes }) { return { nodes: [N(nid(), 'Intermediate event', 'box', 'vertical', '#f59e0b', { x: 120 + nodes.length * 20, y: 400 })], edges: [] } } },
     ],
@@ -169,7 +169,7 @@ export const METHODS = {
       return { nodes: [init], edges: [] }
     },
     toolbar: [
-      { label: 'Add Pivot', run({ nodes }) { const c = nodes.filter((n) => n.data.kind === 'diamond').length; return { nodes: [N(nid(), 'Pivotal event', 'diamond', 'horizontal', '#6366f1', { x: 260 + c * 220, y: 200 })], edges: [] } } },
+      { label: 'Add Pivot', run({ nodes }) { const c = nodes.filter((n) => n.data.kind === 'diamond').length; return { nodes: [N(nid(), 'Pivotal event', 'diamond', 'horizontal', '#795548', { x: 260 + c * 220, y: 200 })], edges: [] } } },
       { label: 'Add Outcome', run({ nodes }) { const c = nodes.filter((n) => n.data.outcome).length; return { nodes: [N(nid(), 'Outcome', 'box', 'horizontal', '#16a34a', { x: 760, y: 60 + c * 110 }, { outcome: true })], edges: [] } } },
     ],
     // Branches from a pivot alternate Success (green) / Failure (red).

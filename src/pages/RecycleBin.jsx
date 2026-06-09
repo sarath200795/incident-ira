@@ -42,7 +42,7 @@ export default function RecycleBin() {
         <div className="space-y-2">
           {items.map((it) => (
             <motion.div key={`${it._kind}:${it.id}`} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="card flex items-center gap-3 p-4">
-              <div className="grid h-10 w-10 place-items-center rounded-xl text-white" style={{ backgroundColor: it._kind === 'incident' ? '#6366f1' : '#0891b2' }}>
+              <div className="grid h-10 w-10 place-items-center rounded-xl text-white" style={{ backgroundColor: it._kind === 'incident' ? '#795548' : '#0891b2' }}>
                 {it._kind === 'incident' ? <ClipboardList size={18} /> : <Activity size={18} />}
               </div>
               <div className="min-w-0 flex-1">

@@ -8,7 +8,7 @@ import { useIncidents } from '../context/IncidentContext'
 import { setUserStatus, setUserRole } from '../lib/firestore'
 import { ROLES, roleLabel } from '../lib/permissions'
 
-const ROLE_COLOR = { reporter: '#0891b2', investigator: '#6366f1', admin: '#dc2626' }
+const ROLE_COLOR = { reporter: '#0891b2', investigator: '#795548', admin: '#dc2626' }
 
 export default function Users() {
   const { users } = useIncidents()

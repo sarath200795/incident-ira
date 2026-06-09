@@ -11,12 +11,12 @@ export default function IncidentLoader({ size = 160 }) {
     <svg width={size} height={size} viewBox="0 0 100 100" role="img" aria-label="Loading">
       <defs>
         <linearGradient id="il-shield" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#818cf8" />
-          <stop offset="1" stopColor="#4f46e5" />
+          <stop offset="0" stopColor="#a1887f" />
+          <stop offset="1" stopColor="#6d4c41" />
         </linearGradient>
         <radialGradient id="il-sweep" cx="50%" cy="50%" r="50%">
-          <stop offset="0" stopColor="#6366f1" stopOpacity="0.45" />
-          <stop offset="1" stopColor="#6366f1" stopOpacity="0" />
+          <stop offset="0" stopColor="#795548" stopOpacity="0.45" />
+          <stop offset="1" stopColor="#795548" stopOpacity="0" />
         </radialGradient>
       </defs>
 
@@ -25,7 +25,7 @@ export default function IncidentLoader({ size = 160 }) {
         <motion.circle
           key={i}
           cx={c} cy={c} r="20"
-          fill="none" stroke="#6366f1" strokeWidth="1.5"
+          fill="none" stroke="#795548" strokeWidth="1.5"
           initial={{ scale: 0.4, opacity: 0.6 }}
           animate={{ scale: 2.1, opacity: 0 }}
           transition={{ duration: 2.4, repeat: Infinity, ease: 'easeOut', delay: i * 0.8 }}

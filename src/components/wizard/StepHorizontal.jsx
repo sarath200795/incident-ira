@@ -39,7 +39,7 @@ export default function StepHorizontal({ value = {}, onChange }) {
               const on = (value.locations || []).includes(l)
               return (
                 <button key={l} type="button" onClick={() => toggleLoc(l)}
-                  className="chip transition" style={on ? { backgroundColor: '#4f46e5', color: '#fff' } : { backgroundColor: '#e0e7ff', color: '#4338ca' }}>
+                  className="chip transition" style={on ? { backgroundColor: '#6d4c41', color: '#fff' } : { backgroundColor: '#efebe9', color: '#5d4037' }}>
                   {l}
                 </button>
               )

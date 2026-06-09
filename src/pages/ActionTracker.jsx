@@ -54,7 +54,7 @@ export default function ActionTracker() {
 
       <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
         {[
-          { label: 'Total', value: counts.total, color: '#4f46e5' },
+          { label: 'Total', value: counts.total, color: '#6d4c41' },
           { label: 'Open', value: counts.open, color: '#ef4444' },
           { label: 'In Progress', value: counts.in_progress, color: '#f59e0b' },
           { label: 'Closed', value: counts.closed, color: '#22c55e' },
@@ -88,7 +88,7 @@ export default function ActionTracker() {
             return (
               <motion.div key={`${a.sourceId}:${a.id}`} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i * 0.02, 0.3) }}
                 className="card flex flex-wrap items-center gap-3 p-4">
-                <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-white" style={{ backgroundColor: a.source === 'incident' ? '#6366f1' : '#0891b2' }}>
+                <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-white" style={{ backgroundColor: a.source === 'incident' ? '#795548' : '#0891b2' }}>
                   {a.source === 'incident' ? <ClipboardList size={16} /> : <Activity size={16} />}
                 </div>
                 <div className="min-w-0 flex-1">

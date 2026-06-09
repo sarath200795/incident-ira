@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
-import { ShieldCheck, ClipboardList, BarChart3, ShieldAlert } from 'lucide-react'
+import { ShieldCheck, ClipboardList, BarChart3 } from 'lucide-react'
+import Logo from './Logo'
 import { LEGAL_PAGES } from '../lib/legal'
 
 const FEATURES = [
@@ -20,8 +21,8 @@ export default function AuthShell({ children }) {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <div className="grid h-11 w-11 place-items-center rounded-2xl bg-white/15 backdrop-blur">
-            <ShieldAlert size={24} />
+          <div className="grid h-11 w-11 place-items-center rounded-2xl bg-white shadow-glow">
+            <Logo size={28} />
           </div>
           <span className="text-xl font-extrabold tracking-tight">Incident IRA</span>
         </motion.div>
@@ -65,7 +66,7 @@ export default function AuthShell({ children }) {
           className="pointer-events-none absolute -bottom-10 -right-10 opacity-20 animate-float"
           aria-hidden
         >
-          <ShieldAlert className="text-brand-300" size={220} />
+          <Logo size={240} />
         </motion.div>
 
         <div className="space-y-2">
@@ -87,7 +88,7 @@ export default function AuthShell({ children }) {
           transition={{ duration: 0.4 }}
         >
           <div className="mb-6 flex items-center gap-2 lg:hidden">
-            <ShieldAlert size={22} className="text-brand-500" />
+            <Logo size={24} />
             <span className="text-lg font-extrabold">Incident IRA</span>
           </div>
           {children}

@@ -28,7 +28,7 @@ export default function EditableNode({ id, data, selected }) {
   const flow = data.flow || 'vertical'
   const targetPos = flow === 'vertical' ? Position.Top : Position.Left
   const sourcePos = flow === 'vertical' ? Position.Bottom : Position.Right
-  const color = data.color || '#6366f1'
+  const color = data.color || '#795548'
 
   const label = (
     editing ? (

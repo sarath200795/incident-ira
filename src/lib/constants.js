@@ -64,7 +64,7 @@ export const LOCATIONS = [
 // ── Incident lifecycle ────────────────────────────────────────────────────────
 export const LIFECYCLE = [
   { key: 'reporting', label: 'Reporting', color: '#0ea5e9' },
-  { key: 'investigation_team', label: 'Team Formed', color: '#6366f1' },
+  { key: 'investigation_team', label: 'Team Formed', color: '#795548' },
   { key: 'investigation', label: 'Investigation', color: '#8b5cf6' },
   { key: 'capa', label: 'CAPA', color: '#f59e0b' },
   { key: 'horizontal', label: 'Horizontal Deployment', color: '#ec4899' },

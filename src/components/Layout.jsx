@@ -12,7 +12,6 @@ import {
   Users as UsersIcon,
   ScrollText,
   Trash2,
-  ShieldAlert,
   LogOut,
   Menu,
   Clock,
@@ -20,6 +19,7 @@ import {
 import { useAuth } from '../context/AuthContext'
 import { useIncidents } from '../context/IncidentContext'
 import Assistant from './Assistant'
+import Logo from './Logo'
 import { Modal } from './ui'
 import { useIdleTimeout } from '../hooks/useIdleTimeout'
 import { IDLE_MS, WARN_MS, formatMMSS } from '../lib/session'
@@ -84,8 +84,8 @@ export default function Layout() {
   const SidebarContent = (
     <div className="flex h-full flex-col gap-1 overflow-y-auto px-3 py-4">
       <div className="mb-4 flex items-center gap-3 px-2">
-        <div className="grid h-10 w-10 place-items-center rounded-xl bg-brand-500 text-white shadow-glow">
-          <ShieldAlert size={20} />
+        <div className="grid h-10 w-10 place-items-center rounded-xl bg-white shadow-glow">
+          <Logo size={26} />
         </div>
         <div className="min-w-0">
           <p className="truncate text-sm font-extrabold text-white">Incident IRA</p>
@@ -180,7 +180,7 @@ export default function Layout() {
             <Menu size={20} />
           </button>
           <span className="flex items-center gap-2 font-extrabold">
-            <ShieldAlert size={18} className="text-brand-500" /> Incident IRA
+            <Logo size={20} /> Incident IRA
           </span>
         </header>
 

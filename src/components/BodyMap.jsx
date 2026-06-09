@@ -133,10 +133,10 @@ function Region({ region, mode, selected, count, max, onToggle }) {
   let fill, opacity
   if (heat) {
     const t = max ? count / max : 0
-    fill = count ? '#4f46e5' : '#cbd5e1'
+    fill = count ? '#6d4c41' : '#cbd5e1'
     opacity = count ? 0.2 + 0.7 * t : 0.18
   } else {
-    fill = selected ? '#4f46e5' : '#c7d2fe'
+    fill = selected ? '#6d4c41' : '#d7ccc8'
     opacity = selected ? 0.92 : 0.32
   }
   // Count number on the heatmap (skip the tiny finger/toe spots to avoid clutter).
@@ -146,7 +146,7 @@ function Region({ region, mode, selected, count, max, onToggle }) {
       <motion.g
         fill={fill}
         fillOpacity={opacity}
-        stroke="#6366f1"
+        stroke="#795548"
         strokeOpacity={selected || (heat && count) ? 0.7 : 0.25}
         strokeWidth="0.8"
         onClick={onToggle ? () => onToggle(region.key) : undefined}
@@ -161,8 +161,8 @@ function Region({ region, mode, selected, count, max, onToggle }) {
       </motion.g>
       {center && (
         <g pointerEvents="none">
-          <circle cx={center[0]} cy={center[1]} r="6" fill="#fff" stroke="#4f46e5" strokeWidth="0.6" />
-          <text x={center[0]} y={center[1]} fontSize="7" fontWeight="800" fill="#3730a3" textAnchor="middle" dominantBaseline="central">{count}</text>
+          <circle cx={center[0]} cy={center[1]} r="6" fill="#fff" stroke="#6d4c41" strokeWidth="0.6" />
+          <text x={center[0]} y={center[1]} fontSize="7" fontWeight="800" fill="#4e342e" textAnchor="middle" dominantBaseline="central">{count}</text>
         </g>
       )}
     </g>

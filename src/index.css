@@ -15,14 +15,14 @@ body {
   margin: 0;
 }
 
-/* Animated aurora background used on auth + public pages (indigo/violet) */
+/* Animated aurora background used on auth + public pages (warm brown) */
 .aurora {
   background:
-    radial-gradient(40% 50% at 15% 20%, rgba(99, 102, 241, 0.38), transparent 60%),
-    radial-gradient(40% 50% at 85% 15%, rgba(129, 140, 248, 0.30), transparent 60%),
-    radial-gradient(50% 60% at 75% 85%, rgba(67, 56, 202, 0.32), transparent 60%),
-    radial-gradient(40% 50% at 20% 90%, rgba(14, 165, 233, 0.22), transparent 60%),
-    #0b0e16;
+    radial-gradient(40% 50% at 15% 20%, rgba(121, 85, 72, 0.46), transparent 60%),
+    radial-gradient(40% 50% at 85% 15%, rgba(166, 124, 82, 0.34), transparent 60%),
+    radial-gradient(50% 60% at 75% 85%, rgba(93, 64, 55, 0.44), transparent 60%),
+    radial-gradient(40% 50% at 20% 90%, rgba(244, 169, 58, 0.20), transparent 60%),
+    #1b1410;
   background-size: 200% 200%;
   animation: aurora-move 18s ease infinite;
 }
