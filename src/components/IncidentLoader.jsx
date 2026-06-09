@@ -1,56 +1,47 @@
 import { motion } from 'framer-motion'
 
-/**
- * Themed full-screen loader: a shield emblem with a sweeping "radar" scan and
- * concentric pulse rings — an animated SVG (no raster assets), matching the
- * app's interactive-visual style.
- */
+// Transition/loading animation: the Incident IRA logo assembling itself — the
+// report document draws in first, then the amber warning triangle pops in. Loops
+// while loading. Pure SVG + framer-motion (no raster assets).
+const DUR = 2.4
+const DOC_TIMES = [0, 0.16, 0.86, 0.94, 1]
+const TRI_TIMES = [0, 0.34, 0.52, 0.94, 1]
+
 export default function IncidentLoader({ size = 160 }) {
-  const c = size / 2
   return (
-    <svg width={size} height={size} viewBox="0 0 100 100" role="img" aria-label="Loading">
-      <defs>
-        <linearGradient id="il-shield" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#a1887f" />
-          <stop offset="1" stopColor="#6d4c41" />
-        </linearGradient>
-        <radialGradient id="il-sweep" cx="50%" cy="50%" r="50%">
-          <stop offset="0" stopColor="#795548" stopOpacity="0.45" />
-          <stop offset="1" stopColor="#795548" stopOpacity="0" />
-        </radialGradient>
-      </defs>
-
-      {/* concentric pulse rings */}
-      {[0, 1, 2].map((i) => (
-        <motion.circle
-          key={i}
-          cx={c} cy={c} r="20"
-          fill="none" stroke="#795548" strokeWidth="1.5"
-          initial={{ scale: 0.4, opacity: 0.6 }}
-          animate={{ scale: 2.1, opacity: 0 }}
-          transition={{ duration: 2.4, repeat: Infinity, ease: 'easeOut', delay: i * 0.8 }}
-          style={{ transformOrigin: '50px 50px' }}
-        />
-      ))}
-
-      {/* rotating radar sweep */}
+    <svg width={size} height={size} viewBox="0 0 48 48" role="img" aria-label="Loading">
+      {/* Document — appears first */}
       <motion.g
-        style={{ transformOrigin: '50px 50px' }}
-        animate={{ rotate: 360 }}
-        transition={{ duration: 2.2, repeat: Infinity, ease: 'linear' }}
+        style={{ transformBox: 'fill-box', transformOrigin: 'center' }}
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: [0, 1, 1, 1, 0], scale: [0.8, 1, 1, 1, 0.96] }}
+        transition={{ duration: DUR, times: DOC_TIMES, repeat: Infinity, repeatDelay: 0.2, ease: 'easeInOut' }}
       >
-        <path d="M50 50 L50 8 A42 42 0 0 1 86 30 Z" fill="url(#il-sweep)" />
+        <path
+          d="M12 6 H27 L34 13 V39 A3 3 0 0 1 31 42 H12 A3 3 0 0 1 9 39 V9 A3 3 0 0 1 12 6 Z"
+          fill="#f5efe6" stroke="#5d4037" strokeWidth="2.4" strokeLinejoin="round"
+        />
+        <path d="M27 6 V13 H34" fill="none" stroke="#5d4037" strokeWidth="2.4" strokeLinejoin="round" />
+        <rect x="13.3" y="17.4" width="3.6" height="3.6" rx="0.9" fill="#f4b740" />
+        <rect x="19" y="18" width="9.5" height="2.2" rx="1.1" fill="#5d4037" />
+        <rect x="13.3" y="23.4" width="3.6" height="3.6" rx="0.9" fill="#c0492f" />
+        <rect x="19" y="24" width="9.5" height="2.2" rx="1.1" fill="#5d4037" />
+        <rect x="13.3" y="29.8" width="11" height="2.2" rx="1.1" fill="#5d4037" />
       </motion.g>
 
-      {/* shield emblem */}
+      {/* Warning triangle — pops in after the document, with a slight overshoot */}
       <motion.g
-        initial={{ scale: 0.9, opacity: 0.85 }}
-        animate={{ scale: [0.92, 1, 0.92] }}
-        transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
-        style={{ transformOrigin: '50px 50px' }}
+        style={{ transformBox: 'fill-box', transformOrigin: 'center' }}
+        initial={{ opacity: 0, scale: 0.3 }}
+        animate={{ opacity: [0, 0, 1, 1, 0], scale: [0.3, 0.3, 1, 1, 0.92] }}
+        transition={{ duration: DUR, times: TRI_TIMES, repeat: Infinity, repeatDelay: 0.2, ease: [0.34, 1.56, 0.64, 1] }}
       >
-        <path d="M50 30 L66 36 V52 c0 11-7 17-16 21 -9-4-16-10-16-21 V36 Z" fill="url(#il-shield)" />
-        <path d="M43 51 l5 5 9-10" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+        <path
+          d="M33 23.6 L44 41.4 A1.8 1.8 0 0 1 42.4 44 H23.6 A1.8 1.8 0 0 1 22 41.4 Z"
+          fill="#f4a93a" stroke="#5d4037" strokeWidth="2.4" strokeLinejoin="round"
+        />
+        <rect x="31.7" y="30.4" width="2.6" height="6.2" rx="1.3" fill="#4e342e" />
+        <circle cx="33" cy="40.2" r="1.55" fill="#4e342e" />
       </motion.g>
     </svg>
   )
