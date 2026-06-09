@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { Mail, Lock, ArrowRight, WifiOff, Activity } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -8,12 +8,17 @@ import { useAuth } from '../context/AuthContext'
 import { authErrorMessage, isNetworkError } from '../lib/authErrors'
 
 export default function Login() {
-  const { login } = useAuth()
+  const { login, isAuthed, isApproved } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [form, setForm] = useState({ email: '', password: '' })
   const [busy, setBusy] = useState(false)
   const [netErr, setNetErr] = useState(false)
+
+  // Already signed in (e.g. session persisted, or just logged in) → go to the app.
+  useEffect(() => {
+    if (isAuthed && isApproved) navigate(location.state?.from?.pathname || '/app/dashboard', { replace: true })
+  }, [isAuthed, isApproved, navigate, location.state])
 
   const onSubmit = async (e) => {
     e.preventDefault()

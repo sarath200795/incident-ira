@@ -78,6 +78,7 @@ export function AuthProvider({ children }) {
       }
       await updateProfile(cred.user, { displayName: name })
       await createOrganization({ orgName, address, uid: cred.user.uid, name, email })
+      setUser(cred.user)
       await withNetworkRetry(() => refreshProfile(cred.user.uid))
     } catch (err) {
       // Roll back the half-created account so the email can be reused.
@@ -100,6 +101,7 @@ export function AuthProvider({ children }) {
         orgId,
         orgName: orgName || '',
       })
+      setUser(cred.user)
       await withNetworkRetry(() => refreshProfile(cred.user.uid))
     } catch (err) {
       await deleteUser(cred.user).catch(() => {})
@@ -109,6 +111,10 @@ export function AuthProvider({ children }) {
 
   const login = async ({ email, password }) => {
     const cred = await withNetworkRetry(() => signInWithEmailAndPassword(auth, email, password))
+    // Set the user immediately so isAuthed is true right away — don't wait for the
+    // async onAuthStateChanged listener, which would let the post-login redirect
+    // bounce off ProtectedRoute before the session is recognised.
+    setUser(cred.user)
     await withNetworkRetry(() => refreshProfile(cred.user.uid))
   }
 
