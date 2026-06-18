@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, useCallback } from 'rea
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  sendPasswordResetEmail,
   signOut as fbSignOut,
   onAuthStateChanged,
   updateProfile,
@@ -118,8 +119,19 @@ export function AuthProvider({ children }) {
     await withNetworkRetry(() => refreshProfile(cred.user.uid))
   }
 
+  // Send a password-reset email. Firebase handles the secure reset link and the
+  // hosted reset page, so we only need to fire the request.
+  const resetPassword = async (email) => {
+    await withNetworkRetry(() => sendPasswordResetEmail(auth, email))
+  }
+
   const signOut = async () => {
     await fbSignOut(auth)
+    // Clear user AND profile synchronously (don't wait for the async
+    // onAuthStateChanged listener). Otherwise there's a window where isAuthed is
+    // still true but profile is null, which makes ProtectedRoute bounce to
+    // /pending and race the redirect to /login — leaving a blank page.
+    setUser(null)
     setProfile(null)
   }
 
@@ -137,6 +149,7 @@ export function AuthProvider({ children }) {
     registerOrganization,
     signUpMember,
     login,
+    resetPassword,
     signOut,
     refreshProfile: () => user && refreshProfile(user.uid),
   }
