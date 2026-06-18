@@ -127,6 +127,11 @@ export function AuthProvider({ children }) {
 
   const signOut = async () => {
     await fbSignOut(auth)
+    // Clear user AND profile synchronously (don't wait for the async
+    // onAuthStateChanged listener). Otherwise there's a window where isAuthed is
+    // still true but profile is null, which makes ProtectedRoute bounce to
+    // /pending and race the redirect to /login — leaving a blank page.
+    setUser(null)
     setProfile(null)
   }
 
