@@ -1,6 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import { AnimatePresence } from 'framer-motion'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import ProtectedRoute from './components/ProtectedRoute'
 import Layout from './components/Layout'
 import { IncidentProvider } from './context/IncidentContext'
@@ -39,13 +38,17 @@ function AppShell() {
 }
 
 export default function App() {
-  const location = useLocation()
   if (!isFirebaseConfigured) return <SetupNeeded />
+  // NOTE: routes are intentionally NOT wrapped in <AnimatePresence mode="wait">.
+  // That keeps the previous route's subtree mounted (with its stale location)
+  // during the exit animation, so redirect routes (<Navigate>) and
+  // ProtectedRoute's auth-based redirects re-fire navigate() in that window —
+  // which on logout produced a blank page and tripped Chrome's "Throttling
+  // navigation" guard. Pages keep their own mount animations.
   return (
     <Suspense fallback={<FullScreenLoader label="Loading…" />}>
-      <AnimatePresence mode="wait">
-        <Routes location={location} key={location.pathname}>
-          <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
+      <Routes>
+        <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -75,7 +78,6 @@ export default function App() {
 
           <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
         </Routes>
-      </AnimatePresence>
     </Suspense>
   )
 }
