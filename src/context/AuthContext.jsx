@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, useCallback } from 'rea
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  sendPasswordResetEmail,
   signOut as fbSignOut,
   onAuthStateChanged,
   updateProfile,
@@ -118,6 +119,12 @@ export function AuthProvider({ children }) {
     await withNetworkRetry(() => refreshProfile(cred.user.uid))
   }
 
+  // Send a password-reset email. Firebase handles the secure reset link and the
+  // hosted reset page, so we only need to fire the request.
+  const resetPassword = async (email) => {
+    await withNetworkRetry(() => sendPasswordResetEmail(auth, email))
+  }
+
   const signOut = async () => {
     await fbSignOut(auth)
     setProfile(null)
@@ -137,6 +144,7 @@ export function AuthProvider({ children }) {
     registerOrganization,
     signUpMember,
     login,
+    resetPassword,
     signOut,
     refreshProfile: () => user && refreshProfile(user.uid),
   }
