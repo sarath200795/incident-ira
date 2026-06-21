@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, lazy, Suspense, Component } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence, useReducedMotion, useMotionValue, animate } from 'framer-motion'
-import { X, Send, Sparkles, Lightbulb, Move, EyeOff, MessageCircle } from 'lucide-react'
+import { X, Send, Sparkles, Lightbulb, Move, EyeOff, MessageCircle, ArrowRight, ArrowLeft, Compass } from 'lucide-react'
 import { useIncidents } from '../context/IncidentContext'
 import { useAuth } from '../context/AuthContext'
 import { pageGuide, suggestedQuestions, answer, askAI, buildAIContext } from '../lib/assistant'
@@ -24,6 +24,23 @@ const ls = {
 }
 const loop = (d) => ({ duration: d, repeat: Infinity, ease: 'easeInOut' })
 const IDLE_SLEEP_MS = 3 * 60 * 1000
+
+// ── First-login walkthrough ──────────────────────────────────────────────────
+// Sam walks to each sidebar destination, spotlights it and explains it. Steps
+// with a `sel` highlight a DOM target (desktop sidebar). `place` steps have no
+// target — Sam stands centre-stage (welcome) or at his home corner (finale), so
+// the tour degrades gracefully on mobile where the sidebar is a hidden drawer.
+const TOUR_BASE = [
+  { place: 'center', title: 'Hi, I’m Sam 👋', text: 'I’m your safety guide. Here’s a quick tour of Incident IRA — it takes about 30 seconds.' },
+  { sel: '[data-tour="dashboard"]', title: 'Dashboard', text: 'Your live safety overview — counts by severity, type, HSE category and a body-map heatmap.' },
+  { sel: '[data-tour="incidents"]', title: 'Incidents', text: 'Every reported incident lives here. Open one to continue its 5-step investigation.' },
+  { sel: '[data-tour="report"]', title: 'Report an Incident', text: 'Start here when something happens. It saves as you go, so you can resume anytime.' },
+  { sel: '[data-tour="illness"]', title: 'Illness Reports', text: 'Log work-related illness — agent, exposure, PPE and corrective actions.' },
+  { sel: '[data-tour="injuries"]', title: 'Injury Reports', text: 'Each injured person gets a record to verify, with a detailed body map.' },
+  { sel: '[data-tour="actions"]', title: 'Action Tracker', text: 'All CAPA and illness actions, with owners and due dates. Overdue ones are flagged.' },
+]
+const TOUR_ADMIN = { sel: '[data-tour="users"]', title: 'Users (Admin)', text: 'Approve new sign-ups here and set each person’s role: Reporter, Investigator or Admin.' }
+const TOUR_FINALE = { place: 'home', title: 'I’m always here', text: 'Tap me anytime to ask things like “what’s overdue?” or “how do I report an incident?”. Enjoy!' }
 
 const SKIN = '#e8b48f', SKIN_D = '#c98b62', HAT = '#f4b400', HAT_D = '#c98a00'
 const VEST = '#2563eb', VEST_D = '#1e40af', STRIPE = '#fde047', TROUSER = '#1e3a8a', SHOE = '#0b1220'
@@ -170,7 +187,7 @@ export default function Assistant() {
   const location = useLocation()
   const navigate = useNavigate()
   const { incidents, illnesses, openActions, overdueActions, pendingInjuries } = useIncidents()
-  const { user } = useAuth()
+  const { user, isAdmin } = useAuth()
   const reduced = useReducedMotion()
   const uid = user?.uid || 'anon'
 
@@ -186,6 +203,12 @@ export default function Assistant() {
   const [facing, setFacing] = useState(-1)
   const [asleep, setAsleep] = useState(false)
   const [pinned, setPinned] = useState(() => ls.get(`ira:guide:pinned:${uid}`) === '1')
+
+  // Guided first-login tour.
+  const [tour, setTour] = useState(null) // null | { step }
+  const [tourRect, setTourRect] = useState(null) // highlighted target's screen rect
+  const tourSteps = useMemo(() => [...TOUR_BASE, ...(isAdmin ? [TOUR_ADMIN] : []), TOUR_FINALE], [isAdmin])
+  const tourStartedRef = useRef(false)
 
   const savedPos = useMemo(() => { try { return JSON.parse(ls.get(`ira:guide:pos:${uid}`) || 'null') } catch { return null } }, [uid])
   const mx = useMotionValue(savedPos?.x ?? 80)
@@ -213,6 +236,7 @@ export default function Assistant() {
   // Movement / pose state machine.
   useEffect(() => {
     if (!enabled) return undefined
+    if (tour) return undefined // the tour drives Sam's position/pose
     if (asleep) { setMode('sleep'); return undefined }
     if (open || tip) {
       if (!pinned) { setFacing(-1); animate(mx, homeX(), { duration: 0.7, ease: 'linear' }); animate(my, 0, { duration: 0.4 }) }
@@ -247,11 +271,59 @@ export default function Assistant() {
     }
     t = setTimeout(step, 1400)
     return () => { alive = false; clearTimeout(t); if (anim?.stop) anim.stop() }
-  }, [enabled, asleep, open, tip, writingPage, reduced, pinned, mx, my])
+  }, [enabled, tour, asleep, open, tip, writingPage, reduced, pinned, mx, my])
+
+  // Auto-start the walkthrough once, on a user's very first visit.
+  const tourKey = `ira:guide:tour:${uid}`
+  useEffect(() => {
+    if (!enabled || tourStartedRef.current || uid === 'anon') return undefined
+    if (ls.get(tourKey) === '1') return undefined
+    tourStartedRef.current = true
+    // Suppress the session greeting — the tour greets instead.
+    try { sessionStorage.setItem(`ira:guide:greeted:${uid}`, '1') } catch { /* ignore */ }
+    const t = setTimeout(() => { setOpen(false); setTip(null); setTour({ step: 0 }) }, 1100)
+    return () => clearTimeout(t)
+  }, [enabled, uid, tourKey])
+
+  // Drive Sam to the current tour step's target and measure it for the spotlight.
+  useEffect(() => {
+    if (!tour) return undefined
+    const measure = () => {
+      const stepDef = tourSteps[tour.step]
+      const vw = window.innerWidth || 1000
+      const vh = window.innerHeight || 800
+      let rect = null
+      if (stepDef?.sel) {
+        const el = document.querySelector(stepDef.sel)
+        const r = el?.getBoundingClientRect()
+        if (r && r.width > 0 && r.height > 0) rect = r
+      }
+      setTourRect(rect)
+      const clampY = (y) => Math.min(0, Math.max(-(vh - 170), y))
+      if (rect) {
+        setFacing(-1)
+        animate(mx, Math.min(rect.right + 14, vw - 96), { duration: 0.7, ease: 'easeInOut' })
+        animate(my, clampY(rect.top + rect.height / 2 - vh + 62), { duration: 0.7, ease: 'easeInOut' })
+      } else if (stepDef?.place === 'home') {
+        setFacing(-1)
+        animate(mx, homeX(), { duration: 0.6, ease: 'easeInOut' })
+        animate(my, 0, { duration: 0.5, ease: 'easeInOut' })
+      } else {
+        setFacing(1)
+        animate(mx, vw / 2 - 40, { duration: 0.7, ease: 'easeInOut' })
+        animate(my, clampY(-(vh / 2 - 90)), { duration: 0.7, ease: 'easeInOut' })
+      }
+      setMode('walk')
+    }
+    measure()
+    const t = setTimeout(() => setMode('wave'), 760)
+    window.addEventListener('resize', measure)
+    return () => { clearTimeout(t); window.removeEventListener('resize', measure) }
+  }, [tour, tourSteps, mx, my])
 
   // Login greeting (once per browser session) → then per-page tips.
   useEffect(() => {
-    if (!enabled || open) return undefined
+    if (!enabled || open || tour) return undefined
     const greetKey = `ira:guide:greeted:${uid}`
     const greeted = (() => { try { return sessionStorage.getItem(greetKey) === '1' } catch { return false } })()
     if (!greeted) {
@@ -265,7 +337,13 @@ export default function Assistant() {
     const seenKey = `ira:guide:tip:${uid}:${guide.title}`
     if (ls.get(seenKey) !== '1') { const t = setTimeout(() => setTip({ title: guide.title, text: guide.tips[0] }), 900); return () => clearTimeout(t) }
     return undefined
-  }, [location.pathname, open, uid, guide, enabled])
+  }, [location.pathname, open, uid, guide, enabled, tour])
+
+  // Tour controls.
+  const endTour = () => { ls.set(tourKey, '1'); setTour(null); setTourRect(null); setMode('idle') }
+  const nextTour = () => { if (tour && tour.step < tourSteps.length - 1) setTour({ step: tour.step + 1 }); else endTour() }
+  const backTour = () => { if (tour && tour.step > 0) setTour({ step: tour.step - 1 }) }
+  const startTour = () => { setOpen(false); setTip(null); setPinned(false); setTour({ step: 0 }) }
 
   const dismissTip = () => {
     if (tip && !tip.greeting) ls.set(`ira:guide:tip:${uid}:${guide.title}`, '1')
@@ -332,15 +410,15 @@ export default function Assistant() {
     <div className="no-print">
       {/* Draggable walking character */}
       <motion.div
-        className="fixed bottom-1 left-0 z-40 cursor-grab active:cursor-grabbing"
+        className={`fixed bottom-1 left-0 cursor-grab active:cursor-grabbing ${tour ? 'z-50' : 'z-40'}`}
         style={{ x: mx, y: my }}
-        drag
+        drag={!tour}
         dragMomentum={false}
         dragElastic={0.04}
         onDragStart={() => { setMode('idle'); lastRef.current = Date.now(); setAsleep(false) }}
         onDragEnd={onDragEnd}
       >
-        <button onClick={() => (open ? setOpen(false) : openPanel())} className="relative block" aria-label="Open Sam, the Safety Guide">
+        <button onClick={() => { if (tour) return; open ? setOpen(false) : openPanel() }} className="relative block" aria-label="Open Sam, the Safety Guide">
           {reduced ? (
             <div style={{ transform: `scaleX(${facing})` }}>
               <Character mode={shownMode} reduced />
@@ -357,6 +435,67 @@ export default function Assistant() {
           )}
         </button>
       </motion.div>
+
+      {/* First-login guided tour: dim/spotlight + Sam-led explanation bubble */}
+      <AnimatePresence>
+        {tour && (() => {
+          const stepDef = tourSteps[tour.step]
+          const isLast = tour.step === tourSteps.length - 1
+          const vw = typeof window !== 'undefined' ? window.innerWidth : 1000
+          const vh = typeof window !== 'undefined' ? window.innerHeight : 800
+          const bubble = tourRect
+            ? { left: Math.min(tourRect.right + 96, vw - 296), top: Math.min(Math.max(tourRect.top - 6, 12), vh - 248) }
+            : stepDef.place === 'home'
+              ? { right: 20, bottom: 184 }
+              : { left: Math.max(12, vw / 2 - 144), top: vh / 2 + 76 }
+          return (
+            <motion.div key="tour" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-40">
+              {/* Click blocker so the tour stays in control */}
+              <div className="absolute inset-0" />
+              {/* Spotlight on the target, or a flat dim for placed steps */}
+              {tourRect ? (
+                <motion.div
+                  layout
+                  className="pointer-events-none absolute rounded-xl"
+                  style={{
+                    top: tourRect.top - 6, left: tourRect.left - 6,
+                    width: tourRect.width + 12, height: tourRect.height + 12,
+                    boxShadow: '0 0 0 9999px rgba(11,18,32,0.62)', border: '2px solid #f4b400',
+                  }}
+                />
+              ) : (
+                <div className="pointer-events-none absolute inset-0 bg-ink-950/60" />
+              )}
+              {/* Explanation bubble */}
+              <motion.div
+                initial={{ opacity: 0, y: 8, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+                style={bubble}
+                className="absolute w-72 max-w-[calc(100vw-2rem)] rounded-2xl border border-clay-200 bg-clay-surface p-4 shadow-glow"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-brand-700"><Compass size={13} /> Tour · {tour.step + 1}/{tourSteps.length}</span>
+                  <button onClick={endTour} className="rounded-lg p-1 text-ink-400 hover:bg-clay-100" aria-label="Skip tour"><X size={14} /></button>
+                </div>
+                <p className="mt-1.5 text-sm font-extrabold text-ink-900">{stepDef.title}</p>
+                <p className="mt-1 text-xs leading-relaxed text-ink-600">{stepDef.text}</p>
+                <div className="mt-3 flex items-center justify-between gap-2">
+                  <button onClick={endTour} className="text-xs font-semibold text-ink-400 hover:text-ink-700">Skip</button>
+                  <div className="flex items-center gap-2">
+                    {tour.step > 0 && (
+                      <button onClick={backTour} className="btn-soft px-2.5 py-1.5 text-xs"><ArrowLeft size={13} /> Back</button>
+                    )}
+                    <button onClick={nextTour} className="btn-primary px-3 py-1.5 text-xs">
+                      {isLast ? 'Got it' : (<>Next <ArrowRight size={13} /></>)}
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )
+        })()}
+      </AnimatePresence>
 
       {/* Tip / welcome bubble */}
       <AnimatePresence>
@@ -414,11 +553,12 @@ export default function Assistant() {
               <button type="submit" className="btn-primary px-3 py-2" disabled={!input.trim() || asking}><Send size={16} /></button>
             </form>
 
-            {/* Controls: roam/pin + hide */}
+            {/* Controls: roam/pin + replay tour + hide */}
             <div className="flex items-center justify-between gap-2 px-3 py-2 text-[11px] text-ink-400">
               <button onClick={setRoam} className="inline-flex items-center gap-1 hover:text-ink-700" disabled={!pinned}>
                 <Move size={12} /> {pinned ? 'Let Sam roam' : 'Drag Sam to pin him'}
               </button>
+              <button onClick={startTour} className="inline-flex items-center gap-1 hover:text-ink-700"><Compass size={12} /> Replay tour</button>
               <button onClick={disableGuide} className="inline-flex items-center gap-1 hover:text-ink-700"><EyeOff size={12} /> Hide guide</button>
             </div>
           </motion.div>
