@@ -41,7 +41,7 @@ export default function Illnesses() {
 
   return (
     <div>
-      <PageHeader title="Illness Reports" subtitle={`${illnesses.length} recorded`} icon={Activity}>
+      <PageHeader title="Illness Reports" subtitle={`${illnesses.length} recorded`} icon={Activity} tourId="illness-header">
         <Link to="/app/illness/new" className="btn-primary"><Plus size={16} /> Report Illness</Link>
       </PageHeader>
 

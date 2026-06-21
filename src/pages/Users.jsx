@@ -24,7 +24,7 @@ export default function Users() {
 
   return (
     <div>
-      <PageHeader title="Users" subtitle="Members, roles & approvals" icon={UsersIcon} />
+      <PageHeader title="Users" subtitle="Members, roles & approvals" icon={UsersIcon} tourId="users-header" />
 
       {pending.length > 0 && (
         <div className="mb-6">

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { NavLink, Link, Outlet, useNavigate } from 'react-router-dom'
 import { LEGAL_PAGES } from '../lib/legal'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -20,7 +20,7 @@ import { useAuth } from '../context/AuthContext'
 import { useIncidents } from '../context/IncidentContext'
 import Assistant from './Assistant'
 import Logo from './Logo'
-import { Modal } from './ui'
+import { Modal, Spinner } from './ui'
 import { useIdleTimeout } from '../hooks/useIdleTimeout'
 import { IDLE_MS, WARN_MS, formatMMSS } from '../lib/session'
 
@@ -186,7 +186,11 @@ export default function Layout() {
         </header>
 
         <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-          <Outlet />
+          {/* Local boundary so a page's lazy chunk loads here without unmounting
+              the shell (sidebar + Sam stay put — and Sam's tour survives nav). */}
+          <Suspense fallback={<div className="flex h-[60vh] items-center justify-center"><Spinner size={28} /></div>}>
+            <Outlet />
+          </Suspense>
         </main>
 
         <footer className="no-print mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-1 px-4 py-6 text-xs text-ink-400 sm:px-6 lg:px-8">

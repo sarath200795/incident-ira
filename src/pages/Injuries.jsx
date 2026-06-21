@@ -80,7 +80,7 @@ export default function Injuries() {
 
   return (
     <div>
-      <PageHeader title="Injury Reports" subtitle="Per-person injuries from all incidents — review and verify each one." icon={HeartPulse} />
+      <PageHeader title="Injury Reports" subtitle="Per-person injuries from all incidents — review and verify each one." icon={HeartPulse} tourId="injuries-header" />
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <div className="flex gap-1 rounded-xl bg-clay-surface p-1 shadow-clay-inset">
