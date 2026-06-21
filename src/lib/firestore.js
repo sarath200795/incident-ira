@@ -142,7 +142,20 @@ export async function createPendingMember({ uid, name, email, orgId, orgName }) 
 
 export async function getUserProfile(uid) {
   const snap = await getDoc(userRef(uid))
-  return snap.exists() ? { uid, ...snap.data() } : null
+  return snap.exists() ? normalizeRoles({ uid, ...snap.data() }) : null
+}
+
+// Multi-role compatibility: ensure roles[] exists and collapse to the single
+// highest-privilege role (reporter < investigator < admin) so existing
+// `can(role, …)` / `role === 'admin'` checks honour users holding several roles.
+function normalizeRoles(p) {
+  const roles = Array.isArray(p.roles) && p.roles.length ? p.roles : p.role ? [p.role] : []
+  const isAdmin = p.isAdmin === true || roles.includes('admin')
+  const RANK = { admin: 3, investigator: 2, reporter: 1 }
+  const role = isAdmin
+    ? 'admin'
+    : [...roles].sort((a, b) => (RANK[b] || 0) - (RANK[a] || 0))[0] || p.role || 'reporter'
+  return { ...p, roles, isAdmin, role }
 }
 
 export function subscribeOrgUsers(orgId, cb) {
