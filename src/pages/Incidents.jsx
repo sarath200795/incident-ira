@@ -51,7 +51,7 @@ export default function Incidents() {
 
   return (
     <div>
-      <PageHeader title="Incidents" subtitle={`${incidents.length} recorded`} icon={ClipboardList}>
+      <PageHeader title="Incidents" subtitle={`${incidents.length} recorded`} icon={ClipboardList} tourId="incidents-header">
         <Link to="/app/incidents/new" className="btn-primary"><Plus size={16} /> Report Incident</Link>
       </PageHeader>
 

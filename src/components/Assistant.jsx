@@ -26,21 +26,22 @@ const loop = (d) => ({ duration: d, repeat: Infinity, ease: 'easeInOut' })
 const IDLE_SLEEP_MS = 3 * 60 * 1000
 
 // ── First-login walkthrough ──────────────────────────────────────────────────
-// Sam walks to each sidebar destination, spotlights it and explains it. Steps
-// with a `sel` highlight a DOM target (desktop sidebar). `place` steps have no
-// target — Sam stands centre-stage (welcome) or at his home corner (finale), so
-// the tour degrades gracefully on mobile where the sidebar is a hidden drawer.
+// Sam actually navigates the app and spotlights real on-page elements. Each step
+// optionally has a `route` (Sam navigates there first) and a `sel` (a data-tour
+// target to highlight, polled for after navigation since pages are lazy-loaded).
+// `place` steps have no target — Sam stands centre-stage (welcome) or at his home
+// corner (finale). If a target never appears, the step degrades to a centred card.
 const TOUR_BASE = [
-  { place: 'center', title: 'Hi, I’m Sam 👋', text: 'I’m your safety guide. Here’s a quick tour of Incident IRA — it takes about 30 seconds.' },
-  { sel: '[data-tour="dashboard"]', title: 'Dashboard', text: 'Your live safety overview — counts by severity, type, HSE category and a body-map heatmap.' },
-  { sel: '[data-tour="incidents"]', title: 'Incidents', text: 'Every reported incident lives here. Open one to continue its 5-step investigation.' },
-  { sel: '[data-tour="report"]', title: 'Report an Incident', text: 'Start here when something happens. It saves as you go, so you can resume anytime.' },
-  { sel: '[data-tour="illness"]', title: 'Illness Reports', text: 'Log work-related illness — agent, exposure, PPE and corrective actions.' },
-  { sel: '[data-tour="injuries"]', title: 'Injury Reports', text: 'Each injured person gets a record to verify, with a detailed body map.' },
-  { sel: '[data-tour="actions"]', title: 'Action Tracker', text: 'All CAPA and illness actions, with owners and due dates. Overdue ones are flagged.' },
+  { place: 'center', title: 'Hi, I’m Sam 👋', text: 'I’m your safety guide. Let me walk you through Incident IRA — it only takes about 30 seconds.' },
+  { route: '/app/dashboard', sel: '[data-tour="dash-kpis"]', title: 'Your KPIs', text: 'These tiles summarise incidents, open & overdue actions and injuries to verify — your safety pulse at a glance.' },
+  { route: '/app/dashboard', sel: '[data-tour="dash-charts"]', title: 'Interactive charts', text: 'Severity, type, HSE category, location and a body-map heatmap. Click any segment to cross-filter the whole dashboard.' },
+  { route: '/app/incidents', sel: '[data-tour="incidents-header"]', title: 'Incidents', text: 'Every report lives here. Hit “Report Incident” to start the guided 5-step investigation — it saves as you go.' },
+  { route: '/app/illness', sel: '[data-tour="illness-header"]', title: 'Illness Reports', text: 'Log work-related illness — agent, exposure, PPE and corrective actions — with “Report Illness”.' },
+  { route: '/app/injuries', sel: '[data-tour="injuries-header"]', title: 'Injury Reports', text: 'Each injured person gets a record to review and verify, with a detailed body map.' },
+  { route: '/app/actions', sel: '[data-tour="actions-header"]', title: 'Action Tracker', text: 'All CAPA and illness actions, with owners and due dates. Overdue ones are flagged in red.' },
 ]
-const TOUR_ADMIN = { sel: '[data-tour="users"]', title: 'Users (Admin)', text: 'Approve new sign-ups here and set each person’s role: Reporter, Investigator or Admin.' }
-const TOUR_FINALE = { place: 'home', title: 'I’m always here', text: 'Tap me anytime to ask things like “what’s overdue?” or “how do I report an incident?”. Enjoy!' }
+const TOUR_ADMIN = { route: '/app/users', sel: '[data-tour="users-header"]', title: 'Users (Admin)', text: 'Approve new sign-ups here and set each person’s role: Reporter, Investigator or Admin.' }
+const TOUR_FINALE = { route: '/app/dashboard', place: 'home', title: 'I’m always here', text: 'Tap me anytime to ask things like “what’s overdue?” or “how do I report an incident?”. Enjoy Incident IRA!' }
 
 const SKIN = '#e8b48f', SKIN_D = '#c98b62', HAT = '#f4b400', HAT_D = '#c98a00'
 const VEST = '#2563eb', VEST_D = '#1e40af', STRIPE = '#fde047', TROUSER = '#1e3a8a', SHOE = '#0b1220'
@@ -285,41 +286,55 @@ export default function Assistant() {
     return () => clearTimeout(t)
   }, [enabled, uid, tourKey])
 
-  // Drive Sam to the current tour step's target and measure it for the spotlight.
+  // Drive the tour: navigate to the step's page, then poll for its on-page target
+  // (pages are lazy-loaded), spotlight it and move Sam beside the bubble.
   useEffect(() => {
     if (!tour) return undefined
-    const measure = () => {
-      const stepDef = tourSteps[tour.step]
+    const stepDef = tourSteps[tour.step]
+    let cancelled = false
+    let pollT
+    const needsNav = stepDef?.route && window.location.pathname !== stepDef.route
+    if (needsNav) navigate(stepDef.route)
+    setMode('walk'); setTourRect(null)
+
+    const clampY = (y, vh) => Math.min(0, Math.max(-(vh - 170), y))
+    const place = () => {
       const vw = window.innerWidth || 1000
       const vh = window.innerHeight || 800
-      let rect = null
       if (stepDef?.sel) {
         const el = document.querySelector(stepDef.sel)
         const r = el?.getBoundingClientRect()
-        if (r && r.width > 0 && r.height > 0) rect = r
-      }
-      setTourRect(rect)
-      const clampY = (y) => Math.min(0, Math.max(-(vh - 170), y))
-      if (rect) {
-        setFacing(-1)
-        animate(mx, Math.min(rect.right + 14, vw - 96), { duration: 0.7, ease: 'easeInOut' })
-        animate(my, clampY(rect.top + rect.height / 2 - vh + 62), { duration: 0.7, ease: 'easeInOut' })
-      } else if (stepDef?.place === 'home') {
-        setFacing(-1)
-        animate(mx, homeX(), { duration: 0.6, ease: 'easeInOut' })
-        animate(my, 0, { duration: 0.5, ease: 'easeInOut' })
-      } else {
+        if (!r || r.width === 0 || r.height === 0) return false // not mounted yet
+        setTourRect(r)
+        const below = r.bottom + 188 < vh
+        const bTop = below ? r.bottom + 14 : Math.max(12, r.top - 196)
+        const bLeft = Math.min(Math.max(r.left, 16), vw - 300)
         setFacing(1)
-        animate(mx, vw / 2 - 40, { duration: 0.7, ease: 'easeInOut' })
-        animate(my, clampY(-(vh / 2 - 90)), { duration: 0.7, ease: 'easeInOut' })
+        animate(mx, Math.max(8, bLeft - 84), { duration: 0.6, ease: 'easeInOut' })
+        animate(my, clampY(bTop + 80 - vh + 62, vh), { duration: 0.6, ease: 'easeInOut' })
+        return true
       }
-      setMode('walk')
+      setTourRect(null)
+      if (stepDef?.place === 'home') {
+        setFacing(-1); animate(mx, homeX(), { duration: 0.6, ease: 'easeInOut' }); animate(my, 0, { duration: 0.5, ease: 'easeInOut' })
+      } else {
+        setFacing(1); animate(mx, vw / 2 - 40, { duration: 0.7, ease: 'easeInOut' }); animate(my, clampY(-(vh / 2 - 90), vh), { duration: 0.7, ease: 'easeInOut' })
+      }
+      return true
     }
-    measure()
-    const t = setTimeout(() => setMode('wave'), 760)
-    window.addEventListener('resize', measure)
-    return () => { clearTimeout(t); window.removeEventListener('resize', measure) }
-  }, [tour, tourSteps, mx, my])
+
+    let tries = 0
+    const tick = () => {
+      if (cancelled) return
+      if (place() || tries++ >= 32) { setTimeout(() => !cancelled && setMode('wave'), 350); return }
+      pollT = setTimeout(tick, 110)
+    }
+    pollT = setTimeout(tick, needsNav ? 240 : 40)
+
+    const onResize = () => !cancelled && place()
+    window.addEventListener('resize', onResize)
+    return () => { cancelled = true; clearTimeout(pollT); window.removeEventListener('resize', onResize) }
+  }, [tour, tourSteps, navigate, mx, my])
 
   // Login greeting (once per browser session) → then per-page tips.
   useEffect(() => {
@@ -444,7 +459,10 @@ export default function Assistant() {
           const vw = typeof window !== 'undefined' ? window.innerWidth : 1000
           const vh = typeof window !== 'undefined' ? window.innerHeight : 800
           const bubble = tourRect
-            ? { left: Math.min(tourRect.right + 96, vw - 296), top: Math.min(Math.max(tourRect.top - 6, 12), vh - 248) }
+            ? {
+                left: Math.min(Math.max(tourRect.left, 16), vw - 300),
+                top: tourRect.bottom + 188 < vh ? tourRect.bottom + 14 : Math.max(12, tourRect.top - 196),
+              }
             : stepDef.place === 'home'
               ? { right: 20, bottom: 184 }
               : { left: Math.max(12, vw / 2 - 144), top: vh / 2 + 76 }

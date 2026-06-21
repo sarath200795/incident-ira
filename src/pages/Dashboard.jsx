@@ -142,7 +142,7 @@ export default function Dashboard() {
 
   return (
     <div>
-      <PageHeader title="Dashboard" subtitle="Click any chart segment to filter. Selections stack." icon={LayoutDashboard} />
+      <PageHeader title="Dashboard" subtitle="Click any chart segment to filter. Selections stack." icon={LayoutDashboard} tourId="dash-header" />
 
       {/* Filter bar */}
       <div className="card mb-4 flex flex-wrap items-center gap-3 p-4">
@@ -178,7 +178,7 @@ export default function Dashboard() {
       )}
 
       {/* KPI cards */}
-      <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+      <div data-tour="dash-kpis" className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
         {kpis.map((k, i) => {
           const inner = (
             <>
@@ -198,7 +198,7 @@ export default function Dashboard() {
       </div>
 
       {/* Charts */}
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div data-tour="dash-charts" className="grid gap-4 lg:grid-cols-3">
         <ChartCard title="By Level (Severity)" subtitle="Click a slice to filter">
           {sevData.length ? (
             <ResponsiveContainer width="100%" height={224}>

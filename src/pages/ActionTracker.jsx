@@ -50,7 +50,7 @@ export default function ActionTracker() {
 
   return (
     <div>
-      <PageHeader title="Action Tracker" subtitle="Corrective & preventive actions across incidents and illnesses" icon={ListChecks} />
+      <PageHeader title="Action Tracker" subtitle="Corrective & preventive actions across incidents and illnesses" icon={ListChecks} tourId="actions-header" />
 
       <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
         {[
