@@ -24,12 +24,13 @@ import { Modal } from './ui'
 import { useIdleTimeout } from '../hooks/useIdleTimeout'
 import { IDLE_MS, WARN_MS, formatMMSS } from '../lib/session'
 
-function NavItem({ to, icon: Icon, label, badge, onClick }) {
+function NavItem({ to, icon: Icon, label, badge, onClick, tourId }) {
   return (
     <NavLink
       to={to}
       end
       onClick={onClick}
+      data-tour={tourId}
       className={({ isActive }) =>
         `group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all ${
           isActive ? 'text-white' : 'text-ink-300 hover:bg-white/10 hover:text-white'
@@ -96,23 +97,23 @@ export default function Layout() {
       <p className="px-3 pb-1 pt-2 text-[10px] font-bold uppercase tracking-widest text-ink-500">
         Overview
       </p>
-      <NavItem to="/app/dashboard" icon={LayoutDashboard} label="Dashboard" onClick={close} />
-      <NavItem to="/app/incidents" icon={ClipboardList} label="Incidents" onClick={close} />
+      <NavItem to="/app/dashboard" icon={LayoutDashboard} label="Dashboard" onClick={close} tourId="dashboard" />
+      <NavItem to="/app/incidents" icon={ClipboardList} label="Incidents" onClick={close} tourId="incidents" />
 
       <p className="px-3 pb-1 pt-4 text-[10px] font-bold uppercase tracking-widest text-ink-500">
         Report
       </p>
-      <NavItem to="/app/incidents/new" icon={PlusCircle} label="Report Incident" onClick={close} />
-      <NavItem to="/app/illness" icon={Activity} label="Illness Reports" onClick={close} />
-      <NavItem to="/app/injuries" icon={HeartPulse} label="Injury Reports" badge={pendingInjuries.length} onClick={close} />
-      <NavItem to="/app/actions" icon={ListChecks} label="Action Tracker" badge={actionBadge} onClick={close} />
+      <NavItem to="/app/incidents/new" icon={PlusCircle} label="Report Incident" onClick={close} tourId="report" />
+      <NavItem to="/app/illness" icon={Activity} label="Illness Reports" onClick={close} tourId="illness" />
+      <NavItem to="/app/injuries" icon={HeartPulse} label="Injury Reports" badge={pendingInjuries.length} onClick={close} tourId="injuries" />
+      <NavItem to="/app/actions" icon={ListChecks} label="Action Tracker" badge={actionBadge} onClick={close} tourId="actions" />
 
       {isAdmin && (
         <>
           <p className="px-3 pb-1 pt-4 text-[10px] font-bold uppercase tracking-widest text-ink-500">
             Admin
           </p>
-          <NavItem to="/app/users" icon={UsersIcon} label="Users" badge={pendingUsers.length} onClick={close} />
+          <NavItem to="/app/users" icon={UsersIcon} label="Users" badge={pendingUsers.length} onClick={close} tourId="users" />
           <NavItem to="/app/audit" icon={ScrollText} label="Audit Log" onClick={close} />
           <NavItem to="/app/recycle" icon={Trash2} label="Recycle Bin" badge={deletedIncidents.length} onClick={close} />
         </>
